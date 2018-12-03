@@ -192,6 +192,12 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CppCore\CppCore.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="CppCore\CppCore.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Hardware\Gpio.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -204,6 +210,12 @@
     <Compile Include="main.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Sensors\RotationSensor.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Sensors\RotationSensor.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Stepper\Stepper.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -213,6 +225,8 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Hardware" />
+    <Folder Include="CppCore" />
+    <Folder Include="Sensors" />
     <Folder Include="Stepper" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />

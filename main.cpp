@@ -10,9 +10,11 @@
 #include "Includes.h"
 #include "Hardware/Gpio.h"
 #include "Stepper/Stepper.h"
+#include "Sensors/RotationSensor.h"
 
 using namespace Hardware;
 using namespace Gpio; 
+using namespace Sensors;
 
 #define F_CPU 32000000UL
 
@@ -29,6 +31,11 @@ void initialize(void)
 	SetPinDirection(motorPin2, Dir::Output);
 	SetPinDirection(motorPin3, Dir::Output);
 	SetPinDirection(motorPin4, Dir::Output);
+	
+	SetPinDirection(Pin::B1, Dir::Input);
+	SetPinMode(Pin::B1, Mode::PullDown);
+	SetPinDirection(Pin::B2, Dir::Output);
+	SetPinDirection(Pin::B3, Dir::Output);
 }
 
 void step(uint8_t thisStep)
@@ -74,12 +81,23 @@ void motor(void)
 int main(void)
 {
 	initialize();
-	Stepper stepper = Stepper(512, Pin::A5, Pin::A3, Pin::A6, Pin::A4);
-	stepper.step(126);
+	//Stepper stepper = Stepper(512, Pin::A5, Pin::A3, Pin::A6, Pin::A4);
+	//stepper.step(126);
+	Pin rotationSensorPins[1] = { Pin::B1 };
+	RotationSensor* rotationSensor = new RotationSensor(rotationSensorPins);
+	
+	//SetPinValue(Pin::B2, Value::Low);
+	SetPinValue(Pin::B3, Value::High);
 	
     while (1) 
     {
-		;		
+		if (rotationSensor->getData() == 0b00000001 ){
+			//SetPinValue(Pin::B3, Value::High);	
+		}
+		else {
+			// SetPinValue(Pin::B3, Value::Low);
+		}
+		//SetPinValue(Pin::B3, GetPinValue(Pin::B1));
     }
 }
 
