@@ -18,10 +18,10 @@ using namespace Sensors;
 
 #define F_CPU 32000000UL
 
-Pin motorPin1 = Pin::A5;	// Eventual: D5
-Pin motorPin2 = Pin::A3;	//			 D0
-Pin motorPin3 = Pin::A6;	//			 D6
-Pin motorPin4 = Pin::A4;	//			 D1
+Pin motorPin1 = Pin::D5;	// Eventual: D5		A5
+Pin motorPin2 = Pin::D0;	//			 D0		A3	
+Pin motorPin3 = Pin::D6;	//			 D6		A6
+Pin motorPin4 = Pin::D1;	//			 D1		A4
 const uint16_t delayUS = 2500;
 const uint16_t delayMS = 100;
 
@@ -35,7 +35,8 @@ void initialize(void)
 	SetPinDirection(Pin::B1, Dir::Input);
 	SetPinMode(Pin::B1, Mode::PullDown);
 	SetPinDirection(Pin::B2, Dir::Output);
-	SetPinDirection(Pin::B3, Dir::Output);
+	SetPinDirection(Pin::B0, Dir::Output);
+	SetPinDirection(Pin::A3, Dir::Output);
 }
 
 void step(uint8_t thisStep)
@@ -81,23 +82,21 @@ void motor(void)
 int main(void)
 {
 	initialize();
-	//Stepper stepper = Stepper(512, Pin::A5, Pin::A3, Pin::A6, Pin::A4);
-	//stepper.step(126);
+	Stepper stepper = Stepper(512, Pin::D5, Pin::D0, Pin::D6, Pin::D1);
+	SetPinValue(Pin::B0, Value::High);
+	stepper.step(512);
 	Pin rotationSensorPins[1] = { Pin::B1 };
 	RotationSensor* rotationSensor = new RotationSensor(rotationSensorPins);
-	
-	//SetPinValue(Pin::B2, Value::Low);
-	SetPinValue(Pin::B3, Value::High);
 	
     while (1) 
     {
 		if (rotationSensor->getData() == 0b00000001 ){
-			//SetPinValue(Pin::B3, Value::High);	
 		}
 		else {
-			// SetPinValue(Pin::B3, Value::Low);
+			;
 		}
-		//SetPinValue(Pin::B3, GetPinValue(Pin::B1));
+		
+		
     }
 }
 
