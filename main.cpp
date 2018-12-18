@@ -16,11 +16,11 @@ using namespace Gpio;
 
 #define F_CPU 32000000UL
 
-Pin motorPin1 = Pin::A5;	// Eventual: D5
-Pin motorPin2 = Pin::A3;	//			 D0
-Pin motorPin3 = Pin::A6;	//			 D6
-Pin motorPin4 = Pin::A4;	//			 D1
-const uint16_t delayUS = 2500;
+Pin motorPin1 = Pin::D5;	// Eventual: D5		A5
+Pin motorPin2 = Pin::D0;	//			 D0		A3
+Pin motorPin3 = Pin::D6;	//			 D6		A6
+Pin motorPin4 = Pin::D1;	//			 D1		A4
+const uint16_t delayUS = 292;
 const uint16_t delayMS = 100;
 
 void initialize(void)
@@ -74,8 +74,11 @@ void motor(void)
 int main(void)
 {
 	initialize();
-	Stepper stepper = Stepper(512, Pin::A5, Pin::A3, Pin::A6, Pin::A4);
-	stepper.step(126);
+	//for(uint8_t i = 0; i < 13; i++){		
+	//	motor();
+	//}
+	Stepper stepper = Stepper(513, Pin::D5, Pin::D0, Pin::D6, Pin::D1);
+	stepper.step(200);
 	
     while (1) 
     {

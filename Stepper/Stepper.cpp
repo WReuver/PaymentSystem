@@ -206,30 +206,27 @@ void Stepper::step(int steps_to_move)
   // decrement the number of steps, moving one step each time:
   while (steps_left > 0)
   {
-	_delay_us(2500);
+	_delay_us(292);
     // increment or decrement the step number,
     // depending on direction:
     if (this->direction == 1)
     {
-    this->step_number++;
-    if (this->step_number == this->number_of_steps) {
-        this->step_number = 0;
-    }
+		this->step_number++;
+		if (this->step_number == this->number_of_steps) {
+			this->step_number = 0;
+		}
     }
     else
     {
-    if (this->step_number == 0) {
-        this->step_number = this->number_of_steps;
-    }
-    this->step_number--;
+		if (this->step_number == 0) {
+			this->step_number = this->number_of_steps;
+		}
+		this->step_number--;
     }
     // decrement the steps left:
     steps_left--;
     // step the motor to step number 0, 1, ..., {3 or 10}
-    if (this->pin_count == 5)
-    stepMotor(this->step_number % 10);
-    else
-    stepMotor(this->step_number % 4);    
+	stepMotor(this->step_number % 4);    
   }
 }
 
