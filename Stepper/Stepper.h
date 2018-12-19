@@ -79,7 +79,6 @@
 #ifndef Stepper_h
 #define Stepper_h
 
-#include <stdlib.h>
 #include "../Includes.h"
 #include "../Hardware/Gpio.h"
 

@@ -192,16 +192,34 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Hardware\AtxMega.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Hardware\AtxMega.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Hardware\Gpio.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Hardware\Gpio.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Hardware\SystemClock.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Hardware\SystemClock.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Includes.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="SPI\SPI.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="SPI\SPI.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Stepper\Stepper.cpp">
@@ -213,6 +231,8 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Hardware" />
+    <Folder Include="SPI" />
+    <Folder Include="RFID" />
     <Folder Include="Stepper" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />

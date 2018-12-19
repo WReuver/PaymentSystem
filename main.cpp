@@ -10,6 +10,8 @@
 #include "Includes.h"
 #include "Hardware/Gpio.h"
 #include "Stepper/Stepper.h"
+#include "Hardware/SystemClock.h"
+#include "SPI/SPI.h"
 
 using namespace Hardware;
 using namespace Gpio; 
@@ -74,15 +76,16 @@ void motor(void)
 int main(void)
 {
 	initialize();
-	//for(uint8_t i = 0; i < 13; i++){		
-	//	motor();
-	//}
-	Stepper stepper = Stepper(513, Pin::D5, Pin::D0, Pin::D6, Pin::D1);
-	stepper.step(200);
+	SystemClock::SetClockSource(SystemClock::Source::RC32MHz);
+	
+	SPI spi = SPI();
+	
+	uint8_t msg = 42;
 	
     while (1) 
     {
-		;		
+		spi.transmit(msg);		
+		_delay_ms(1000);
     }
 }
 
