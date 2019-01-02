@@ -79,8 +79,10 @@ int main(void)
 	SystemClock::SetClockSource(SystemClock::Source::RC32MHz);
 	
 	SPI spi = SPI();
+	Stepper stepper = Stepper(512, motorPin1, motorPin2, motorPin3, motorPin4);
+	stepper.step(-100);
 	
-	uint8_t msg = 42;
+	uint8_t msg = 0b1010100;
 	
     while (1) 
     {
