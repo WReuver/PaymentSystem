@@ -206,7 +206,7 @@ void Stepper::step(int steps_to_move)
   // decrement the number of steps, moving one step each time:
   while (steps_left > 0)
   {
-	_delay_us(292);
+	_delay_us(6500);	// 6500 good speed :)
     // increment or decrement the step number,
     // depending on direction:
     if (this->direction == 1)
