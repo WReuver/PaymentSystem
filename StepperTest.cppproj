@@ -232,7 +232,6 @@
   <ItemGroup>
     <Folder Include="Hardware" />
     <Folder Include="SPI" />
-    <Folder Include="RFID" />
     <Folder Include="Stepper" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />

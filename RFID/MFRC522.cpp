@@ -10,14 +10,15 @@
  * Constructor.
  */
 MFRC522::MFRC522() {
+	spi = SPI();
 } // End constructor
 
 /**
  * Constructor.
  * Prepares the output pins.
  */
-MFRC522::MFRC522(	uint8_t chipSelectPin,		///< Arduino pin connected to MFRC522's SPI slave select input (Pin 24, NSS, active low)
-					uint8_t resetPowerDownPin	///< Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low)
+MFRC522::MFRC522(	Gpio::Pin chipSelectPin,		///< Arduino pin connected to MFRC522's SPI slave select input (Pin 24, NSS, active low)
+					Gpio::Pin resetPowerDownPin	///< Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low)
 				) {
 	_chipSelectPin = chipSelectPin;
 	_resetPowerDownPin = resetPowerDownPin;
@@ -39,30 +40,29 @@ MFRC522::MFRC522(	uint8_t chipSelectPin,		///< Arduino pin connected to MFRC522'
  Gpio::Dir INPUT = Gpio::Dir :: Input;
 
 void MFRC522::digitalWrite(Gpio::Pin pin, Gpio::Value val)
-    {
+{
 	Gpio::SetPinValue(pin,val);
-	}
+}
 	
-uint8_t MFRC522::digitalRead(Gpio::Pin pin)
-	{
+Gpio::Value MFRC522::digitalRead(Gpio::Pin pin)
+{
 	return Gpio::GetPinValue(pin);	
-	}
+}
 	
 void MFRC522::pinMode(Gpio::Pin  pin, Gpio::Dir dir)
-    {
+{
 	Gpio:: SetPinDirection(pin,dir);
-    }	
+}	
 
 	
 void MFRC522::PCD_WriteRegister(	uint8_t reg,		///< The register to write to. One of the PCD_Register enums.
 									uint8_t value		///< The value to write.
 								) {
-	SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV4, MSBFIRST, SPI_MODE0));	// Set the settings to work with SPI bus
+	spi.settings(SPI::Prescaler::DIV8, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
 	digitalWrite(_chipSelectPin, LOW);		// Select slave
-	SPI.transfer(reg & 0x7E);				// MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
-	SPI.transfer(value);
+	spi.transfer(reg & 0x7E);				// MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
+	spi.transfer(value);
 	digitalWrite(_chipSelectPin, HIGH);		// Release slave again
-	SPI.endTransaction(); // Stop using the SPI bus
 } // End PCD_WriteRegister()
 
 /**
@@ -73,14 +73,13 @@ void MFRC522::PCD_WriteRegister(	uint8_t reg,		///< The register to write to. On
 									uint8_t count,		///< The number of bytes to write to the register
 									uint8_t *values	///< The values to write. Byte array.
 								) {
-	SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV4, MSBFIRST, SPI_MODE0));	// Set the settings to work with SPI bus
+	spi.settings(SPI::Prescaler::DIV8, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
 	digitalWrite(_chipSelectPin, LOW);		// Select slave
-	SPI.transfer(reg & 0x7E);				// MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
+	spi.transfer(reg & 0x7E);				// MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
 	for (uint8_t index = 0; index < count; index++) {
-		SPI.transfer(values[index]);
+		spi.transfer(values[index]);
 	}
 	digitalWrite(_chipSelectPin, HIGH);		// Release slave again
-	SPI.endTransaction(); // Stop using the SPI bus
 } // End PCD_WriteRegister()
 
 /**
@@ -90,12 +89,11 @@ void MFRC522::PCD_WriteRegister(	uint8_t reg,		///< The register to write to. On
 uint8_t MFRC522::PCD_ReadRegister(	uint8_t reg	///< The register to read from. One of the PCD_Register enums.
 								) {
 	uint8_t value;
-	SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV4, MSBFIRST, SPI_MODE0));	// Set the settings to work with SPI bus
+	spi.settings(SPI::Prescaler::DIV8, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
 	digitalWrite(_chipSelectPin, LOW);			// Select slave
-	SPI.transfer(0x80 | (reg & 0x7E));			// MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
-	value = SPI.transfer(0);					// Read the value back. Send 0 to stop reading.
+	spi.transfer(0x80 | (reg & 0x7E));			// MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
+	value = spi.transfer(0);					// Read the value back. Send 0 to stop reading.
 	digitalWrite(_chipSelectPin, HIGH);			// Release slave again
-	SPI.endTransaction(); // Stop using the SPI bus
 	return value;
 } // End PCD_ReadRegister()
 
@@ -114,10 +112,10 @@ void MFRC522::PCD_ReadRegister(	uint8_t reg,		///< The register to read from. On
 	//Serial.print(F("Reading ")); 	Serial.print(count); Serial.println(F(" bytes from register."));
 	uint8_t address = 0x80 | (reg & 0x7E);		// MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
 	uint8_t index = 0;							// Index in values array.
-	SPI.beginTransaction(SPISettings(SPI_CLOCK_DIV4, MSBFIRST, SPI_MODE0));	// Set the settings to work with SPI bus
+	spi.settings(SPI::Prescaler::DIV8, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
 	digitalWrite(_chipSelectPin, LOW);		// Select slave
 	count--;								// One read is performed outside of the loop
-	SPI.transfer(address);					// Tell MFRC522 which address we want to read
+	spi.transfer(address);					// Tell MFRC522 which address we want to read
 	while (index < count) {
 		if (index == 0 && rxAlign) {		// Only update bit positions rxAlign..7 in values[0]
 			// Create bit mask for bit positions rxAlign..7
@@ -126,18 +124,17 @@ void MFRC522::PCD_ReadRegister(	uint8_t reg,		///< The register to read from. On
 				mask |= (1 << i);
 			}
 			// Read value and tell that we want to read the same address again.
-			uint8_t value = SPI.transfer(address);
+			uint8_t value = spi.transfer(address);
 			// Apply mask to both current value of values[0] and the new data in value.
 			values[0] = (values[index] & ~mask) | (value & mask);
 		}
 		else { // Normal case
-			values[index] = SPI.transfer(address);	// Read value and tell that we want to read the same address again.
+			values[index] = spi.transfer(address);	// Read value and tell that we want to read the same address again.
 		}
 		index++;
 	}
-	values[index] = SPI.transfer(0);			// Read the final byte. Send 0 to stop reading.
+	values[index] = spi.transfer(0);			// Read the final byte. Send 0 to stop reading.
 	digitalWrite(_chipSelectPin, HIGH);			// Release slave again
-	SPI.endTransaction(); // Stop using the SPI bus
 } // End PCD_ReadRegister()
 
 /**
@@ -239,8 +236,8 @@ void MFRC522::PCD_Init() {
 /**
  * Initializes the MFRC522 chip.
  */
-void MFRC522::PCD_Init(	uint8_t chipSelectPin,		///< Arduino pin connected to MFRC522's SPI slave select input (Pin 24, NSS, active low)
-						uint8_t resetPowerDownPin	///< Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low)
+void MFRC522::PCD_Init(	Gpio::Pin chipSelectPin,		///< Arduino pin connected to MFRC522's SPI slave select input (Pin 24, NSS, active low)
+						Gpio::Pin resetPowerDownPin	///< Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low)
 					) {
 	_chipSelectPin = chipSelectPin;
 	_resetPowerDownPin = resetPowerDownPin; 
@@ -1224,7 +1221,9 @@ MFRC522::StatusCode MFRC522::PCD_MIFARE_Transceive(	uint8_t *sendData,		///< Poi
  * 
  * @return const __FlashStringHelper *
  */
-const __FlashStringHelper *MFRC522::GetStatusCodeName(MFRC522::StatusCode code	///< One of the StatusCode enums.
+
+/******************************************************************* @todo 
+const String *MFRC522::GetStatusCodeName(MFRC522::StatusCode code	///< One of the StatusCode enums.
 										) {
 	switch (code) {
 		case STATUS_OK:				return F("Success.");
@@ -1238,7 +1237,7 @@ const __FlashStringHelper *MFRC522::GetStatusCodeName(MFRC522::StatusCode code	/
 		case STATUS_MIFARE_NACK:	return F("A MIFARE PICC responded with NAK.");
 		default:					return F("Unknown error");
 	}
-} // End GetStatusCodeName()
+} // End GetStatusCodeName()*/
 
 /**
  * Translates the SAK (Select Acknowledge) to a PICC type.
@@ -1266,28 +1265,6 @@ MFRC522::PICC_Type MFRC522::PICC_GetType(uint8_t sak		///< The SAK byte returned
 		default:	return PICC_TYPE_UNKNOWN;
 	}
 } // End PICC_GetType()
-
-/**
- * Returns a __FlashStringHelper pointer to the PICC type name.
- * 
- * @return const __FlashStringHelper *
- */
-const __FlashStringHelper *MFRC522::PICC_GetTypeName(PICC_Type piccType) {	///< One of the PICC_Type enums.
-		//can be used to check the protocol of the coin used 											) {
-	/*switch (piccType) {
-		case PICC_TYPE_ISO_14443_4:		return F("PICC compliant with ISO/IEC 14443-4");
-		case PICC_TYPE_ISO_18092:		return F("PICC compliant with ISO/IEC 18092 (NFC)");
-		case PICC_TYPE_MIFARE_MINI:		return F("MIFARE Mini, 320 bytes");
-		case PICC_TYPE_MIFARE_1K:		return F("MIFARE 1KB");
-		case PICC_TYPE_MIFARE_4K:		return F("MIFARE 4KB");
-		case PICC_TYPE_MIFARE_UL:		return F("MIFARE Ultralight or Ultralight C");
-		case PICC_TYPE_MIFARE_PLUS:		return F("MIFARE Plus");
-		case PICC_TYPE_TNP3XXX:			return F("MIFARE TNP3XXX");
-		case PICC_TYPE_NOT_COMPLETE:	return F("SAK indicates UID is not complete.");
-		case PICC_TYPE_UNKNOWN:
-		default:						return F("Unknown type");
-	}*/
-} // End PICC_GetTypeName()
 
 /**
  * Dumps debug info about the connected PCD to Serial.
@@ -1389,6 +1366,8 @@ void MFRC522::PICC_DumpDetailsToSerial(Uid *uid	///< Pointer to Uid struct retur
  * Dumps memory contents of a MIFARE Classic PICC.
  * On success the PICC is halted after dumping the data.
  */
+
+/*
 void MFRC522::PICC_DumpMifareClassicToSerial(	Uid *uid,			///< Pointer to Uid struct returned from a successful PICC_Select().
 												PICC_Type piccType,	///< One of the PICC_Type enums.
 												MIFARE_Key *key		///< Key A used for all sectors.
@@ -1416,14 +1395,14 @@ void MFRC522::PICC_DumpMifareClassicToSerial(	Uid *uid,			///< Pointer to Uid st
 	
 	// Dump sectors, highest address first.
 	if (no_of_sectors) {
-		/*Serial.println(F("Sector Block   0  1  2  3   4  5  6  7   8  9 10 11  12 13 14 15  AccessBits"));*/
+		// Serial.println(F("Sector Block   0  1  2  3   4  5  6  7   8  9 10 11  12 13 14 15  AccessBits"));
 		for (int8_t i = no_of_sectors - 1; i >= 0; i--) {
 			PICC_DumpMifareClassicSectorToSerial(uid, key, i);
 		}
 	}
 	PICC_HaltA(); // Halt the PICC before stopping the encrypted session.
 	PCD_StopCrypto1();
-} // End PICC_DumpMifareClassicToSerial()
+} // End PICC_DumpMifareClassicToSerial() */
 
 /**
  * Dumps memory contents of a sector of a MIFARE Classic PICC.
