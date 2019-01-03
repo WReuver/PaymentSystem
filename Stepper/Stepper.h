@@ -83,6 +83,7 @@
 #include "../Hardware/Gpio.h"
 
 using namespace Hardware;
+using namespace Gpio;
 
 // library interface description
 class Stepper {

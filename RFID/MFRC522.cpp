@@ -32,9 +32,6 @@ MFRC522::MFRC522(	Gpio::Pin chipSelectPin,		///< Arduino pin connected to MFRC52
  * Writes a byte to the specified register in the MFRC522 chip.
  * The interface is described in the datasheet section 8.1.2.
  */
-
- Gpio::Value HIGH = Gpio::Value :: High;
- Gpio::Value LOW = Gpio::Value :: Low;
  
  Gpio::Dir OUTPUT = Gpio::Dir :: Output;
  Gpio::Dir INPUT = Gpio::Dir :: Input;
@@ -59,10 +56,10 @@ void MFRC522::PCD_WriteRegister(	uint8_t reg,		///< The register to write to. On
 									uint8_t value		///< The value to write.
 								) {
 	spi.settings(SPI::Prescaler::DIV8, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
-	digitalWrite(_chipSelectPin, LOW);		// Select slave
+	digitalWrite(_chipSelectPin, Value::Low);		// Select slave
 	spi.transfer(reg & 0x7E);				// MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
 	spi.transfer(value);
-	digitalWrite(_chipSelectPin, HIGH);		// Release slave again
+	digitalWrite(_chipSelectPin, Value::High);		// Release slave again
 } // End PCD_WriteRegister()
 
 /**
@@ -74,12 +71,12 @@ void MFRC522::PCD_WriteRegister(	uint8_t reg,		///< The register to write to. On
 									uint8_t *values	///< The values to write. Byte array.
 								) {
 	spi.settings(SPI::Prescaler::DIV8, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
-	digitalWrite(_chipSelectPin, LOW);		// Select slave
+	digitalWrite(_chipSelectPin, Value::Low);		// Select slave
 	spi.transfer(reg & 0x7E);				// MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
 	for (uint8_t index = 0; index < count; index++) {
 		spi.transfer(values[index]);
 	}
-	digitalWrite(_chipSelectPin, HIGH);		// Release slave again
+	digitalWrite(_chipSelectPin, Value::High);		// Release slave again
 } // End PCD_WriteRegister()
 
 /**
@@ -90,10 +87,10 @@ uint8_t MFRC522::PCD_ReadRegister(	uint8_t reg	///< The register to read from. O
 								) {
 	uint8_t value;
 	spi.settings(SPI::Prescaler::DIV8, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
-	digitalWrite(_chipSelectPin, LOW);			// Select slave
+	digitalWrite(_chipSelectPin, Value::Low);			// Select slave
 	spi.transfer(0x80 | (reg & 0x7E));			// MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
 	value = spi.transfer(0);					// Read the value back. Send 0 to stop reading.
-	digitalWrite(_chipSelectPin, HIGH);			// Release slave again
+	digitalWrite(_chipSelectPin, Value::High);			// Release slave again
 	return value;
 } // End PCD_ReadRegister()
 
@@ -113,7 +110,7 @@ void MFRC522::PCD_ReadRegister(	uint8_t reg,		///< The register to read from. On
 	uint8_t address = 0x80 | (reg & 0x7E);		// MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
 	uint8_t index = 0;							// Index in values array.
 	spi.settings(SPI::Prescaler::DIV8, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
-	digitalWrite(_chipSelectPin, LOW);		// Select slave
+	digitalWrite(_chipSelectPin, Value::Low);		// Select slave
 	count--;								// One read is performed outside of the loop
 	spi.transfer(address);					// Tell MFRC522 which address we want to read
 	while (index < count) {
@@ -134,7 +131,7 @@ void MFRC522::PCD_ReadRegister(	uint8_t reg,		///< The register to read from. On
 		index++;
 	}
 	values[index] = spi.transfer(0);			// Read the final byte. Send 0 to stop reading.
-	digitalWrite(_chipSelectPin, HIGH);			// Release slave again
+	digitalWrite(_chipSelectPin, Value::High);			// Release slave again
 } // End PCD_ReadRegister()
 
 /**
@@ -206,13 +203,13 @@ MFRC522::StatusCode MFRC522::PCD_CalculateCRC(	uint8_t *data,		///< In: Pointer 
 void MFRC522::PCD_Init() {
 	// Set the chipSelectPin as digital output, do not select the slave yet
 	pinMode(_chipSelectPin, OUTPUT);
-	digitalWrite(_chipSelectPin, HIGH);
+	digitalWrite(_chipSelectPin, Value::High);
 	
 	// Set the resetPowerDownPin as digital output, do not reset or power down.
 	pinMode(_resetPowerDownPin, OUTPUT);
 	
-	if (digitalRead(_resetPowerDownPin) == LOW) {	//The MFRC522 chip is in power down mode.
-		digitalWrite(_resetPowerDownPin, HIGH);		// Exit power down mode. This triggers a hard reset.
+	if (digitalRead(_resetPowerDownPin) == Value::Low) {	//The MFRC522 chip is in power down mode.
+		digitalWrite(_resetPowerDownPin, Value::High);		// Exit power down mode. This triggers a hard reset.
 		// Section 8.8.2 in the datasheet says the oscillator start-up time is the start up time of the crystal + 37,74�s. Let us be generous: 50ms.
 		_delay_ms(50); 
 	}
@@ -1337,263 +1334,15 @@ void MFRC522::PICC_DumpToSerial(Uid *uid	///< Pointer to Uid struct returned fro
 /**
  * Dumps card info (UID,SAK,Type) about the selected PICC to Serial.
  */
-void MFRC522::PICC_DumpDetailsToSerial(Uid *uid	///< Pointer to Uid struct returned from a successful PICC_Select().
-									) {
-	// UID
-	/*Serial.print(F("Card UID:"));*/
-	/*for (uint8_t i = 0; i < uid->size; i++) {
-		if(uid->uidByte[i] < 0x10)
-			Serial.print(F(" 0"));
-		else
-			Serial.print(F(" "));
-		Serial.print(uid->uidByte[i], HEX);
-	} 
-	Serial.println();
-	
-	// SAK
-	Serial.print(F("Card SAK: "));
-	if(uid->sak < 0x10)
-		Serial.print(F("0"));
-	Serial.println(uid->sak, HEX);
-	
-	// (suggested) PICC type
-	PICC_Type piccType = PICC_GetType(uid->sak);
-	Serial.print(F("PICC type: "));
-	Serial.println(PICC_GetTypeName(piccType));
-} // End PICC_DumpDetailsToSerial()*/
 
 /**
  * Dumps memory contents of a MIFARE Classic PICC.
  * On success the PICC is halted after dumping the data.
  */
 
-/*
-void MFRC522::PICC_DumpMifareClassicToSerial(	Uid *uid,			///< Pointer to Uid struct returned from a successful PICC_Select().
-												PICC_Type piccType,	///< One of the PICC_Type enums.
-												MIFARE_Key *key		///< Key A used for all sectors.
-											) {
-	uint8_t no_of_sectors = 0;
-	switch (piccType) {
-		case PICC_TYPE_MIFARE_MINI:
-			// Has 5 sectors * 4 blocks/sector * 16 bytes/block = 320 bytes.
-			no_of_sectors = 5;
-			break;
-			
-		case PICC_TYPE_MIFARE_1K:
-			// Has 16 sectors * 4 blocks/sector * 16 bytes/block = 1024 bytes.
-			no_of_sectors = 16;
-			break;
-			
-		case PICC_TYPE_MIFARE_4K:
-			// Has (32 sectors * 4 blocks/sector + 8 sectors * 16 blocks/sector) * 16 bytes/block = 4096 bytes.
-			no_of_sectors = 40;
-			break;
-			
-		default: // Should not happen. Ignore.
-			break;
-	}
-	
-	// Dump sectors, highest address first.
-	if (no_of_sectors) {
-		// Serial.println(F("Sector Block   0  1  2  3   4  5  6  7   8  9 10 11  12 13 14 15  AccessBits"));
-		for (int8_t i = no_of_sectors - 1; i >= 0; i--) {
-			PICC_DumpMifareClassicSectorToSerial(uid, key, i);
-		}
-	}
-	PICC_HaltA(); // Halt the PICC before stopping the encrypted session.
-	PCD_StopCrypto1();
-} // End PICC_DumpMifareClassicToSerial() */
-
-/**
- * Dumps memory contents of a sector of a MIFARE Classic PICC.
- * Uses PCD_Authenticate(), MIFARE_Read() and PCD_StopCrypto1.
- * Always uses PICC_CMD_MF_AUTH_KEY_A because only Key A can always read the sector trailer access bits.
- */
-void MFRC522::PICC_DumpMifareClassicSectorToSerial(Uid *uid,			///< Pointer to Uid struct returned from a successful PICC_Select().
-													MIFARE_Key *key,	///< Key A for the sector.
-													uint8_t sector			///< The sector to dump, 0..39.
-													) {
-	MFRC522::StatusCode status;
-	uint8_t firstBlock;		// Address of lowest address to dump actually last block dumped)
-	uint8_t no_of_blocks;		// Number of blocks in sector
-	bool isSectorTrailer;	// Set to true while handling the "last" (ie highest address) in the sector.
-	
-	// The access bits are stored in a peculiar fashion.
-	// There are four groups:
-	//		g[3]	Access bits for the sector trailer, block 3 (for sectors 0-31) or block 15 (for sectors 32-39)
-	//		g[2]	Access bits for block 2 (for sectors 0-31) or blocks 10-14 (for sectors 32-39)
-	//		g[1]	Access bits for block 1 (for sectors 0-31) or blocks 5-9 (for sectors 32-39)
-	//		g[0]	Access bits for block 0 (for sectors 0-31) or blocks 0-4 (for sectors 32-39)
-	// Each group has access bits [C1 C2 C3]. In this code C1 is MSB and C3 is LSB.
-	// The four CX bits are stored together in a nible cx and an inverted nible cx_.
-	uint8_t c1, c2, c3;		// Nibbles
-	uint8_t c1_, c2_, c3_;		// Inverted nibbles
-	bool invertedError;		// True if one of the inverted nibbles did not match
-	uint8_t g[4];				// Access bits for each of the four groups.
-	uint8_t group;				// 0-3 - active group for access bits
-	bool firstInGroup;		// True for the first block dumped in the group
-	
-	// Determine position and size of sector.
-	if (sector < 32) { // Sectors 0..31 has 4 blocks each
-		no_of_blocks = 4;
-		firstBlock = sector * no_of_blocks;
-	}
-	else if (sector < 40) { // Sectors 32-39 has 16 blocks each
-		no_of_blocks = 16;
-		firstBlock = 128 + (sector - 32) * no_of_blocks;
-	}
-	else { // Illegal input, no MIFARE Classic PICC has more than 40 sectors.
-		return;
-	}
-		
-	// Dump blocks, highest address first.
-	uint8_t byteCount;
-	uint8_t buffer[18];
-	uint8_t blockAddr;
-	isSectorTrailer = true;
-	for (int8_t blockOffset = no_of_blocks - 1; blockOffset >= 0; blockOffset--) {
-		blockAddr = firstBlock + blockOffset;
-		// Sector number - only on first line
-		/*if (isSectorTrailer) {
-			if(sector < 10)
-				Serial.print(F("   ")); // Pad with spaces
-			else
-				Serial.print(F("  ")); // Pad with spaces
-			Serial.print(sector);
-			Serial.print(F("   "));
-		}
-		else {
-			Serial.print(F("       "));
-		}
-		// Block number
-		if(blockAddr < 10)
-			Serial.print(F("   ")); // Pad with spaces
-		else {
-			if(blockAddr < 100)
-				Serial.print(F("  ")); // Pad with spaces
-			else
-				Serial.print(F(" ")); // Pad with spaces
-		}
-		Serial.print(blockAddr);
-		Serial.print(F("  "));*/
-		// Establish encrypted communications before reading the first block
-		if (isSectorTrailer) {
-			status = PCD_Authenticate(PICC_CMD_MF_AUTH_KEY_A, firstBlock, key, uid);
-			if (status != STATUS_OK) {
-				/*Serial.print(F("PCD_Authenticate() failed: "));
-				Serial.println(GetStatusCodeName(status));
-				return;*/
-			}
-		}
-		// Read block
-		byteCount = sizeof(buffer);
-		status = MIFARE_Read(blockAddr, buffer, &byteCount);
-		if (status != STATUS_OK) {
-			/*Serial.print(F("MIFARE_Read() failed: "));
-			Serial.println(GetStatusCodeName(status));
-			continue;*/
-		}
-		// Dump data
-		/*for (uint8_t index = 0; index < 16; index++) {
-			if(buffer[index] < 0x10)
-				Serial.print(F(" 0"));
-			else
-				Serial.print(F(" "));
-			Serial.print(buffer[index], HEX);
-			if ((index % 4) == 3) {
-				Serial.print(F(" "));
-			}
-		}*/
-		// Parse sector trailer data
-		if (isSectorTrailer) {
-			c1  = buffer[7] >> 4;
-			c2  = buffer[8] & 0xF;
-			c3  = buffer[8] >> 4;
-			c1_ = buffer[6] & 0xF;
-			c2_ = buffer[6] >> 4;
-			c3_ = buffer[7] & 0xF;
-			invertedError = (c1 != (~c1_ & 0xF)) || (c2 != (~c2_ & 0xF)) || (c3 != (~c3_ & 0xF));
-			g[0] = ((c1 & 1) << 2) | ((c2 & 1) << 1) | ((c3 & 1) << 0);
-			g[1] = ((c1 & 2) << 1) | ((c2 & 2) << 0) | ((c3 & 2) >> 1);
-			g[2] = ((c1 & 4) << 0) | ((c2 & 4) >> 1) | ((c3 & 4) >> 2);
-			g[3] = ((c1 & 8) >> 1) | ((c2 & 8) >> 2) | ((c3 & 8) >> 3);
-			isSectorTrailer = false;
-		}
-		
-		// Which access group is this block in?
-		if (no_of_blocks == 4) {
-			group = blockOffset;
-			firstInGroup = true;
-		}
-		else {
-			group = blockOffset / 5;
-			firstInGroup = (group == 3) || (group != (blockOffset + 1) / 5);
-		}
-		
-		/*if (firstInGroup) {
-			// Print access bits
-			Serial.print(F(" [ "));
-			Serial.print((g[group] >> 2) & 1, DEC); Serial.print(F(" "));
-			Serial.print((g[group] >> 1) & 1, DEC); Serial.print(F(" "));
-			Serial.print((g[group] >> 0) & 1, DEC);
-			Serial.print(F(" ] "));
-			if (invertedError) {
-				Serial.print(F(" Inverted access bits did not match! "));
-			}
-		}*/
-		
-		if (group != 3 && (g[group] == 1 || g[group] == 6)) { // Not a sector trailer, a value block
-			long value = (long(buffer[3])<<24) | (long(buffer[2])<<16) | (long(buffer[1])<<8) | long(buffer[0]);
-			/*Serial.print(F(" Value=0x")); Serial.print(value, HEX);
-			Serial.print(F(" Adr=0x")); Serial.print(buffer[12], HEX);*/
-		}
-		/*Serial.println();*/
-	}
-	
-	return;
-} // End PICC_DumpMifareClassicSectorToSerial()
-
 /**
  * Dumps memory contents of a MIFARE Ultralight PICC.
  */
-void MFRC522::PICC_DumpMifareUltralightToSerial() {
-	MFRC522::StatusCode status;
-	uint8_t byteCount;
-	uint8_t buffer[18];
-	uint8_t i;
-	
-	/*Serial.println(F("Page  0  1  2  3"));*/
-	// Try the mpages of the original Ultralight. Ultralight C has more pages.
-	for (uint8_t page = 0; page < 16; page +=4) { // Read returns data for 4 pages at a time.
-		// Read pages
-		byteCount = sizeof(buffer);
-		status = MIFARE_Read(page, buffer, &byteCount);
-		/*if (status != STATUS_OK) {
-			Serial.print(F("MIFARE_Read() failed: "));
-			Serial.println(GetStatusCodeName(status));
-			break;
-		}*/
-		// Dump data
-		for (uint8_t offset = 0; offset < 4; offset++) {
-			i = page + offset;
-			/*if(i < 10)
-				Serial.print(F("  ")); // Pad with spaces
-			else
-				Serial.print(F(" ")); // Pad with spaces
-			Serial.print(i);
-			Serial.print(F("  "));
-			for (uint8_t index = 0; index < 4; index++) {
-				i = 4 * offset + index;
-				if(buffer[i] < 0x10)
-					Serial.print(F(" 0"));
-				else
-					Serial.print(F(" "));
-				Serial.print(buffer[i], HEX);
-			}
-			Serial.println();*/
-		}
-	}
-} // End PICC_DumpMifareUltralightToSerial()
 
 /**
  * Calculates the bit pattern needed for the specified access bits. In the [C1 C2 C3] tuples C1 is MSB (=4) and C3 is LSB (=1).

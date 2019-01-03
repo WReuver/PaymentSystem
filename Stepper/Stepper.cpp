@@ -82,9 +82,6 @@
  * Sets which wires should control the motor.
  */
 
-Gpio::Value LOW = Gpio::Value::Low;
-Gpio::Value HIGH = Gpio::Value::High;
-
 Stepper::Stepper(int number_of_steps, Gpio::Pin motor_pin_1, Gpio::Pin motor_pin_2)
 {
   this->step_number = 0;    // which step the motor is on
@@ -238,48 +235,48 @@ void Stepper::stepMotor(int thisStep)
   if (this->pin_count == 2) {
     switch (thisStep) {
       case 0:  // 01
-        digitalWrite(motor_pin_1, LOW);
-        digitalWrite(motor_pin_2, HIGH);
+        digitalWrite(motor_pin_1, Value::Low);
+        digitalWrite(motor_pin_2, Value::High);
       break;
       case 1:  // 11
-        digitalWrite(motor_pin_1, HIGH);
-        digitalWrite(motor_pin_2, HIGH);
+        digitalWrite(motor_pin_1, Value::High);
+        digitalWrite(motor_pin_2, Value::High);
       break;
       case 2:  // 10
-        digitalWrite(motor_pin_1, HIGH);
-        digitalWrite(motor_pin_2, LOW);
+        digitalWrite(motor_pin_1, Value::High);
+        digitalWrite(motor_pin_2, Value::Low);
       break;
       case 3:  // 00
-        digitalWrite(motor_pin_1, LOW);
-        digitalWrite(motor_pin_2, LOW);
+        digitalWrite(motor_pin_1, Value::Low);
+        digitalWrite(motor_pin_2, Value::Low);
       break;
     }
   }
   if (this->pin_count == 4) {
     switch (thisStep) {
       case 0:  // 1010
-        digitalWrite(motor_pin_1, HIGH);
-        digitalWrite(motor_pin_2, LOW);
-        digitalWrite(motor_pin_3, HIGH);
-        digitalWrite(motor_pin_4, LOW);
+        digitalWrite(motor_pin_1, Value::High);
+        digitalWrite(motor_pin_2, Value::Low);
+        digitalWrite(motor_pin_3, Value::High);
+        digitalWrite(motor_pin_4, Value::Low);
       break;
       case 1:  // 0110
-        digitalWrite(motor_pin_1, LOW);
-        digitalWrite(motor_pin_2, HIGH);
-        digitalWrite(motor_pin_3, HIGH);
-        digitalWrite(motor_pin_4, LOW);
+        digitalWrite(motor_pin_1, Value::Low);
+        digitalWrite(motor_pin_2, Value::High);
+        digitalWrite(motor_pin_3, Value::High);
+        digitalWrite(motor_pin_4, Value::Low);
       break;
       case 2:  //0101
-        digitalWrite(motor_pin_1, LOW);
-        digitalWrite(motor_pin_2, HIGH);
-        digitalWrite(motor_pin_3, LOW);
-        digitalWrite(motor_pin_4, HIGH);
+        digitalWrite(motor_pin_1, Value::Low);
+        digitalWrite(motor_pin_2, Value::High);
+        digitalWrite(motor_pin_3, Value::Low);
+        digitalWrite(motor_pin_4, Value::High);
       break;
       case 3:  //1001
-        digitalWrite(motor_pin_1, HIGH);
-        digitalWrite(motor_pin_2, LOW);
-        digitalWrite(motor_pin_3, LOW);
-        digitalWrite(motor_pin_4, HIGH);
+        digitalWrite(motor_pin_1, Value::High);
+        digitalWrite(motor_pin_2, Value::Low);
+        digitalWrite(motor_pin_3, Value::Low);
+        digitalWrite(motor_pin_4, Value::High);
       break;
     }
   }
@@ -287,74 +284,74 @@ void Stepper::stepMotor(int thisStep)
   if (this->pin_count == 5) {
     switch (thisStep) {
       case 0:  // 01101
-        digitalWrite(motor_pin_1, LOW);
-        digitalWrite(motor_pin_2, HIGH);
-        digitalWrite(motor_pin_3, HIGH);
-        digitalWrite(motor_pin_4, LOW);
-        digitalWrite(motor_pin_5, HIGH);
+        digitalWrite(motor_pin_1, Value::Low);
+        digitalWrite(motor_pin_2, Value::High);
+        digitalWrite(motor_pin_3, Value::High);
+        digitalWrite(motor_pin_4, Value::Low);
+        digitalWrite(motor_pin_5, Value::High);
         break;
       case 1:  // 01001
-        digitalWrite(motor_pin_1, LOW);
-        digitalWrite(motor_pin_2, HIGH);
-        digitalWrite(motor_pin_3, LOW);
-        digitalWrite(motor_pin_4, LOW);
-        digitalWrite(motor_pin_5, HIGH);
+        digitalWrite(motor_pin_1, Value::Low);
+        digitalWrite(motor_pin_2, Value::High);
+        digitalWrite(motor_pin_3, Value::Low);
+        digitalWrite(motor_pin_4, Value::Low);
+        digitalWrite(motor_pin_5, Value::High);
         break;
       case 2:  // 01011
-        digitalWrite(motor_pin_1, LOW);
-        digitalWrite(motor_pin_2, HIGH);
-        digitalWrite(motor_pin_3, LOW);
-        digitalWrite(motor_pin_4, HIGH);
-        digitalWrite(motor_pin_5, HIGH);
+        digitalWrite(motor_pin_1, Value::Low);
+        digitalWrite(motor_pin_2, Value::High);
+        digitalWrite(motor_pin_3, Value::Low);
+        digitalWrite(motor_pin_4, Value::High);
+        digitalWrite(motor_pin_5, Value::High);
         break;
       case 3:  // 01010
-        digitalWrite(motor_pin_1, LOW);
-        digitalWrite(motor_pin_2, HIGH);
-        digitalWrite(motor_pin_3, LOW);
-        digitalWrite(motor_pin_4, HIGH);
-        digitalWrite(motor_pin_5, LOW);
+        digitalWrite(motor_pin_1, Value::Low);
+        digitalWrite(motor_pin_2, Value::High);
+        digitalWrite(motor_pin_3, Value::Low);
+        digitalWrite(motor_pin_4, Value::High);
+        digitalWrite(motor_pin_5, Value::Low);
         break;
       case 4:  // 11010
-        digitalWrite(motor_pin_1, HIGH);
-        digitalWrite(motor_pin_2, HIGH);
-        digitalWrite(motor_pin_3, LOW);
-        digitalWrite(motor_pin_4, HIGH);
-        digitalWrite(motor_pin_5, LOW);
+        digitalWrite(motor_pin_1, Value::High);
+        digitalWrite(motor_pin_2, Value::High);
+        digitalWrite(motor_pin_3, Value::Low);
+        digitalWrite(motor_pin_4, Value::High);
+        digitalWrite(motor_pin_5, Value::Low);
         break;
       case 5:  // 10010
-        digitalWrite(motor_pin_1, HIGH);
-        digitalWrite(motor_pin_2, LOW);
-        digitalWrite(motor_pin_3, LOW);
-        digitalWrite(motor_pin_4, HIGH);
-        digitalWrite(motor_pin_5, LOW);
+        digitalWrite(motor_pin_1, Value::High);
+        digitalWrite(motor_pin_2, Value::Low);
+        digitalWrite(motor_pin_3, Value::Low);
+        digitalWrite(motor_pin_4, Value::High);
+        digitalWrite(motor_pin_5, Value::Low);
         break;
       case 6:  // 10110
-        digitalWrite(motor_pin_1, HIGH);
-        digitalWrite(motor_pin_2, LOW);
-        digitalWrite(motor_pin_3, HIGH);
-        digitalWrite(motor_pin_4, HIGH);
-        digitalWrite(motor_pin_5, LOW);
+        digitalWrite(motor_pin_1, Value::High);
+        digitalWrite(motor_pin_2, Value::Low);
+        digitalWrite(motor_pin_3, Value::High);
+        digitalWrite(motor_pin_4, Value::High);
+        digitalWrite(motor_pin_5, Value::Low);
         break;
       case 7:  // 10100
-        digitalWrite(motor_pin_1, HIGH);
-        digitalWrite(motor_pin_2, LOW);
-        digitalWrite(motor_pin_3, HIGH);
-        digitalWrite(motor_pin_4, LOW);
-        digitalWrite(motor_pin_5, LOW);
+        digitalWrite(motor_pin_1, Value::High);
+        digitalWrite(motor_pin_2, Value::Low);
+        digitalWrite(motor_pin_3, Value::High);
+        digitalWrite(motor_pin_4, Value::Low);
+        digitalWrite(motor_pin_5, Value::Low);
         break;
       case 8:  // 10101
-        digitalWrite(motor_pin_1, HIGH);
-        digitalWrite(motor_pin_2, LOW);
-        digitalWrite(motor_pin_3, HIGH);
-        digitalWrite(motor_pin_4, LOW);
-        digitalWrite(motor_pin_5, HIGH);
+        digitalWrite(motor_pin_1, Value::High);
+        digitalWrite(motor_pin_2, Value::Low);
+        digitalWrite(motor_pin_3, Value::High);
+        digitalWrite(motor_pin_4, Value::Low);
+        digitalWrite(motor_pin_5, Value::High);
         break;
       case 9:  // 00101
-        digitalWrite(motor_pin_1, LOW);
-        digitalWrite(motor_pin_2, LOW);
-        digitalWrite(motor_pin_3, HIGH);
-        digitalWrite(motor_pin_4, LOW);
-        digitalWrite(motor_pin_5, HIGH);
+        digitalWrite(motor_pin_1, Value::Low);
+        digitalWrite(motor_pin_2, Value::Low);
+        digitalWrite(motor_pin_3, Value::High);
+        digitalWrite(motor_pin_4, Value::Low);
+        digitalWrite(motor_pin_5, Value::High);
         break;
     }
   }

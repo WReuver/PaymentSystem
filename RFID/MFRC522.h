@@ -426,8 +426,8 @@ public:
 	bool PICC_ReadCardSerial();
 	
 private:
-	Gpio::Pin  _chipSelectPin;		// Arduino pin connected to MFRC522's SPI slave select input (Pin 24, NSS, active low)
-	Gpio::Pin _resetPowerDownPin;	// Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low)
+	Gpio::Pin  _chipSelectPin = Gpio::Pin::C4;		// Arduino pin connected to MFRC522's SPI slave select input (Pin 24, NSS, active low)
+	Gpio::Pin _resetPowerDownPin = Gpio::Pin::C0;	// Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low)
 	StatusCode MIFARE_TwoStepHelper(uint8_t command, uint8_t blockAddr, long data);
 };
 
