@@ -77,16 +77,16 @@
 #define F_CPU 32000000UL
 
 #include "../Hardware/Gpio.h"
+#include "../SPI/SPI.h"
 #include <stdint.h>
 #include <avr/io.h>
 #include <util/delay.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <avr/pgmspace.h>
 
+//#include <stddef.h>
+//#include <stdlib.h>
+//#include <stdio.h>
 
 using namespace Hardware;
 using namespace Gpio;
@@ -327,6 +327,7 @@ public:
 	
 	// Member variables
 	Uid uid;								// Used by PICC_ReadCardSerial().
+	SPI spi;
 	
 	// Size of the MFRC522 FIFO
 	static const uint8_t FIFO_SIZE = 64;		// The FIFO is 64 bytes.
@@ -335,11 +336,11 @@ public:
 	// Functions for setting up the Arduino
 	/////////////////////////////////////////////////////////////////////////////////////
 	MFRC522();
-	MFRC522(uint8_t chipSelectPin, uint8_t resetPowerDownPin);
+	MFRC522(Gpio::Pin chipSelectPin, Gpio::Pin resetPowerDownPin);
 	
-	void digitalWrite(int pin, Gpio::Value val);
-	void pinMode(int pin, Gpio::Dir dir);
-	uint8_t digitalRead(int pin);
+	void digitalWrite(Gpio::Pin pin, Gpio::Value val);
+	void pinMode(Gpio::Pin pin, Gpio::Dir dir);
+	Gpio::Value digitalRead(Gpio::Pin pin);
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Basic interface functions for communicating with the MFRC522
@@ -357,7 +358,7 @@ public:
 	// Functions for manipulating the MFRC522
 	/////////////////////////////////////////////////////////////////////////////////////
 	void PCD_Init();
-	void PCD_Init(uint8_t chipSelectPin, uint8_t resetPowerDownPin);
+	void PCD_Init(Gpio::Pin chipSelectPin, Gpio::Pin resetPowerDownPin);
 	void PCD_Reset();
 	void PCD_AntennaOn();
 	void PCD_AntennaOff();
@@ -398,11 +399,11 @@ public:
 	StatusCode PCD_MIFARE_Transceive(uint8_t *sendData, uint8_t sendLen, bool acceptTimeout = false);
 	// old function used too much memory, now name moved to flash; if you need char, copy from flash to memory
 	//const char *GetStatusCodeName(byte code);
-	static const __FlashStringHelper *GetStatusCodeName(StatusCode code);
+	// @@@@@@@@@@@ static const __FlashStringHelper *GetStatusCodeName(StatusCode code);
 	static PICC_Type PICC_GetType(uint8_t sak);
 	// old function used too much memory, now name moved to flash; if you need char, copy from flash to memory
 	//const char *PICC_GetTypeName(byte type);
-	static const __FlashStringHelper *PICC_GetTypeName(PICC_Type type);
+	// @@@@@@@@@@@ static const __FlashStringHelper *PICC_GetTypeName(PICC_Type type);
 	
 	// Support functions for debuging
 	void PCD_DumpVersionToSerial();

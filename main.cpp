@@ -79,6 +79,7 @@ int main(void)
 	SystemClock::SetClockSource(SystemClock::Source::RC32MHz);
 	
 	SPI spi = SPI();
+	spi.settings(SPI::Prescaler::DIV2, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
 	Stepper stepper = Stepper(512, motorPin1, motorPin2, motorPin3, motorPin4);
 	stepper.step(-100);
 	
@@ -86,7 +87,9 @@ int main(void)
 	
     while (1) 
     {
-		spi.transmit(msg);		
+		PORTC.OUTCLR = 0x10; // Assert slave
+		spi.transfer(msg);		
+		PORTC.OUTSET = 0x10; // Deassert slave
 		_delay_ms(1000);
     }
 }
