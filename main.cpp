@@ -43,6 +43,7 @@ int main(void)
 	spi.settings(SPI::Prescaler::DIV8, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
 	
 	uint8_t msg = SPIC_CTRL;
+	uint8_t byte1 = 0;
 	
     while (1) 
     {
@@ -62,6 +63,14 @@ int main(void)
 			Gpio::SetPinValue(Pin::D5, Value::Low);
 		}
 		
+		if ( ! mfrc522.PICC_ReadCardSerial())
+		{
+			Gpio::SetPinValue(Pin::D6, Value::High);
+		}
+		else {
+			Gpio::SetPinValue(Pin::D6, Value::Low);
+			byte1 = mfrc522.uid.uidByte[0];
+		}
 		
     }
 }
