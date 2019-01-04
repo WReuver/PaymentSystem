@@ -11,6 +11,9 @@
 #include "Hardware/Gpio.h"
 #include "Stepper/Stepper.h"
 #include "Sensors/RotationSensor.h"
+#include "Hardware/SystemClock.h"
+#include "SPI/SPI.h"
+#include "RFID/MFRC522.h"
 
 using namespace Hardware;
 using namespace Gpio; 
@@ -22,8 +25,6 @@ Pin motorPin1 = Pin::D5;	// Eventual: D5		A5
 Pin motorPin2 = Pin::D0;	//			 D0		A3	
 Pin motorPin3 = Pin::D6;	//			 D6		A6
 Pin motorPin4 = Pin::D1;	//			 D1		A4
-const uint16_t delayUS = 2500;
-const uint16_t delayMS = 100;
 
 void initialize(void)
 {
@@ -39,63 +40,60 @@ void initialize(void)
 	SetPinDirection(Pin::A3, Dir::Output);
 }
 
-void step(uint8_t thisStep)
-{
-	switch (thisStep) {
-		case 0:  // 1010
-		SetPinValue(motorPin1, Value::High);
-		SetPinValue(motorPin2, Value::Low);
-		SetPinValue(motorPin3, Value::High);
-		SetPinValue(motorPin4, Value::Low);
-		break;
-		case 1:  // 0110
-		SetPinValue(motorPin1, Value::Low);
-		SetPinValue(motorPin2, Value::High);
-		SetPinValue(motorPin3, Value::High);
-		SetPinValue(motorPin4, Value::Low);
-		break;
-		case 2:  //0101
-		SetPinValue(motorPin1, Value::Low);
-		SetPinValue(motorPin2, Value::High);
-		SetPinValue(motorPin3, Value::Low);
-		SetPinValue(motorPin4, Value::High);
-		break;
-		case 3:  //1001
-		SetPinValue(motorPin1, Value::High);
-		SetPinValue(motorPin2, Value::Low);
-		SetPinValue(motorPin3, Value::Low);
-		SetPinValue(motorPin4, Value::High);
-		break;
-	}
-}
-
-void motor(void)
-{
-	for(uint8_t i = 0; i < 4; i++){
-		step(i);
-		_delay_us(delayUS);
-		//_delay_ms(delayMS);
-	}
-	return;
-}
-
 int main(void)
 {
 	initialize();
+	// System Clock
+	
+	SystemClock::SetClockSource(SystemClock::Source::RC32MHz);
+	
+	// Stepper Motor
 	Stepper stepper = Stepper(512, Pin::D5, Pin::D0, Pin::D6, Pin::D1);
-	SetPinValue(Pin::B0, Value::High);
-	stepper.step(512);
+	
+	// IR sensor
 	Pin rotationSensorPins[1] = { Pin::B1 };
 	RotationSensor* rotationSensor = new RotationSensor(rotationSensorPins);
 	
+	// SPI
+	SPI spi = SPI();
+	spi.settings(SPI::Prescaler::DIV8, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
+	
+	// RFID
+	MFRC522 mfrc522 = MFRC522();
+	mfrc522.PCD_Init();
+	
+	// Debug Vars
+	uint8_t msg = SPIC_CTRL;
+	uint8_t byte1 = 0;
+	
     while (1) 
     {
+		/*PORTC.OUTCLR = 0x10; // Assert slave
+		spi.transfer(msg);		
+		PORTC.OUTSET = 0x10; // Deassert slave
+		_delay_ms(1000);*/
+				
 		if (rotationSensor->getData() == 0b00000001 ){
 		}
 		else {
 			;
 		}
+		if ( ! mfrc522.PICC_IsNewCardPresent())
+		{
+			Gpio::SetPinValue(Pin::D5, Value::High);
+		}
+		else {
+			Gpio::SetPinValue(Pin::D5, Value::Low);
+		}
 		
+		if ( ! mfrc522.PICC_ReadCardSerial())
+		{
+			Gpio::SetPinValue(Pin::D6, Value::High);
+		}
+		else {
+			Gpio::SetPinValue(Pin::D6, Value::Low);
+			byte1 = mfrc522.uid.uidByte[0];
+		}
 		
     }
 }
