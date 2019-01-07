@@ -196,6 +196,8 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="CppCore\CppCore.h">
+	  <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Hardware\AtxMega.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -224,6 +226,8 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Sensors\RotationSensor.h">
+		<SubType>compile</SubType>
+	</Compile>
     <Compile Include="RFID\MFRC522.cpp">
       <SubType>compile</SubType>
     </Compile>

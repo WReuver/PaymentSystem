@@ -33,11 +33,7 @@ void initialize(void)
 	SetPinDirection(motorPin3, Dir::Output);
 	SetPinDirection(motorPin4, Dir::Output);
 	
-	SetPinDirection(Pin::B1, Dir::Input);
-	SetPinMode(Pin::B1, Mode::PullDown);
-	SetPinDirection(Pin::B2, Dir::Output);
-	SetPinDirection(Pin::B0, Dir::Output);
-	SetPinDirection(Pin::A3, Dir::Output);
+	SetPinDirection(Pin::B5, Dir::Input);
 }
 
 int main(void)
@@ -51,7 +47,7 @@ int main(void)
 	Stepper stepper = Stepper(512, Pin::D5, Pin::D0, Pin::D6, Pin::D1);
 	
 	// IR sensor
-	Pin rotationSensorPins[1] = { Pin::B1 };
+	Pin rotationSensorPins[1] = { Pin::B5 };
 	RotationSensor* rotationSensor = new RotationSensor(rotationSensorPins);
 	
 	// SPI
@@ -74,9 +70,10 @@ int main(void)
 		_delay_ms(1000);*/
 				
 		if (rotationSensor->getData() == 0b00000001 ){
+			Gpio::SetPinValue(Pin::D0, Value::High);
 		}
 		else {
-			;
+			Gpio::SetPinValue(Pin::D0, Value::Low);
 		}
 		if ( ! mfrc522.PICC_IsNewCardPresent())
 		{
