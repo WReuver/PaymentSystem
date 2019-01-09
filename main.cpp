@@ -22,13 +22,26 @@ using namespace Sensors;
 
 #define F_CPU 32000000UL
 
+// Stepper Motor
 bool calibrate;
 extern bool stopMotor;
-
 Pin motorPin1 = Pin::D2;
 Pin motorPin2 = Pin::D1;
 Pin motorPin3 = Pin::D3;
 Pin motorPin4 = Pin::D0;
+Stepper stepper = Stepper(512, motorPin1, motorPin2, motorPin3, motorPin4);
+
+// IR sensor
+Pin rotationSensorPins[1] = { Pin::C0 };
+RotationSensor* rotationSensor = new RotationSensor(rotationSensorPins);
+
+// SPI
+SPI spi = SPI();
+
+// RFID
+MFRC522 mfrc522 = MFRC522();
+MFRC522::MIFARE_Key key;
+uint8_t trailerBlock = 7;
 
 ISR(PORTB_INT0_vect){
 	if(calibrate){
@@ -38,18 +51,24 @@ ISR(PORTB_INT0_vect){
 	} 
 	else {
 		SetPinValue(Pin::E5, Value::Low);
-		stopMotor = true;
-		calibrate = true;
 	}
+}
+
+void calibrateMotor(){
+	calibrate = true;
+	stepper.step(5120);
+}
+
+void rejectCoin(){
+	stepper.step(-136);
 }
 
 void initialize(void)
 {
-	SetPinDirection(motorPin1, Dir::Output);
-	SetPinDirection(motorPin2, Dir::Output);
-	SetPinDirection(motorPin3, Dir::Output);
-	SetPinDirection(motorPin4, Dir::Output);
+	// Set the system clock to 32 MHz
+	SystemClock::SetClockSource(SystemClock::Source::RC32MHz);
 	
+	// Set pinouts and enable logic level converter
 	SetPinDirection(Pin::B0, Dir::Input);		// IR SENSE 1  IN
 	SetPinDirection(Pin::E1, Dir::Output);		// LED 1
 	SetPinDirection(Pin::E4, Dir::Output);		// LED 1
@@ -57,58 +76,45 @@ void initialize(void)
 	SetPinDirection(Pin::E6, Dir::Output);		// LED 2
 	SetPinDirection(Pin::E7, Dir::Output);		// LED 3
 	SetPinDirection(Pin::D4, Dir::Output);		// LLC Output Enable
+	SetPinValue(Pin::D4, Value::High);
 	
+	// Set up rising edge interrupt on pin B0 
 	PORTB.PIN0CTRL = PORT_ISC_RISING_gc;	// IR Sensor pin as interrupt; used with stepper calibration
 	PORTB_INTCTRL = (PORT_INT0LVL_HI_gc);	// 
 	PORTB_INT0MASK = PIN0_bm;				//
 	
-	calibrate = true;
+	// Enable interrupts
 	sei();
+	_delay_ms(100);	
+	
+	// Calibrate the stepper motor to its 'zero' position
+	calibrateMotor();
 }
 
 void setup_interrupts(){
 	cli();
 	CPU_CCP = CCP_IOREG_gc;
-	PMIC_CTRL = (PMIC_HILVLEN_bm);// | PMIC_HILVLEN_bm);
+	PMIC_CTRL = (PMIC_HILVLEN_bm);
 	PMIC_INTPRI = 0x00;
+}
+
+void setup_RFID(){
+	// Set SPI settings for use with the MFRC522
+	spi.settings(SPI::Prescaler::DIV8, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
+	// Initialize the MFRC522
+	mfrc522.PCD_Init();
+	// Clear the authentication key
+	for (uint8_t i = 0; i < 6; i++) {
+		key.keyByte[i] = 0xFF;
+	}
 }
 
 int main(void)
 {
 	setup_interrupts();
-	initialize();
-	// System Clock
-	
-	SystemClock::SetClockSource(SystemClock::Source::RC32MHz);
-	
-	// Stepper Motor
-	Stepper stepper = Stepper(512, Pin::D2, Pin::D1, Pin::D3, Pin::D0);
-	SetPinValue(Pin::D4, Value::High);
-	//Gpio::SetPinValue(Pin::E4, Value::High);
-	stepper.step(136);
-	
-	// IR sensor
-	Pin rotationSensorPins[1] = { Pin::C0 };
-	RotationSensor* rotationSensor = new RotationSensor(rotationSensorPins);
-	
-	
-	// SPI
-	SPI spi = SPI();
-	spi.settings(SPI::Prescaler::DIV8, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
-	
-	// RFID
-	MFRC522 mfrc522 = MFRC522();
-	mfrc522.PCD_Init();
-	MFRC522::MIFARE_Key key;
-	uint8_t trailerBlock = 7;
-	for (uint8_t i = 0; i < 6; i++) {
-		key.keyByte[i] = 0xFF;
-	}
-	
-	// Debug Vars
-	uint8_t msg = SPIC_CTRL;
-	uint8_t byte1 = 0;
-		
+	initialize();	
+	setup_RFID();
+			
     while (1) 
     {
 		if (rotationSensor->getData() == 0b00000001 ){
@@ -124,14 +130,19 @@ int main(void)
 		
 		
 		MFRC522::StatusCode status = (MFRC522::StatusCode) mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, trailerBlock, &key, &(mfrc522.uid));
-		if ( status != MFRC522::STATUS_OK ){
-			Gpio::SetPinValue(Pin::E4, Value::Low);
-			//_delay_ms(5000);
+		if ( status == MFRC522::STATUS_OK ){
+			Gpio::SetPinValue(Pin::E4, Value::High);
+			_delay_ms(1000);
+			stepper.step(136);
+			_delay_ms(1000);
+			calibrateMotor();
+			_delay_ms(1000);
+			rejectCoin();
+			_delay_ms(1000);
+			calibrateMotor();
 		}
 		else {
-			Gpio::SetPinValue(Pin::E4, Value::High);
-			stepper.step(5120);
-			_delay_ms(2000);
+			Gpio::SetPinValue(Pin::E4, Value::Low);
 		}
     }
 }
