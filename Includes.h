@@ -2,7 +2,7 @@
  * Includes.h
  *
  * Created: 22/11/2018 12:09:03
- * Author : Wesley
+ * Author : Wesley Reuver
  */
 
 #ifndef __INCLUDES_H__

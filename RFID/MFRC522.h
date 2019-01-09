@@ -5,6 +5,7 @@
  * Rewritten by Søren Thing Andersen (access.thing.dk), fall of 2013 (Translation to English, refactored, comments, anti collision, cascade levels.)
  * Extended by Tom Clement with functionality to write to sector 0 of UID changeable Mifare cards.
  * Released into the public domain.
+ * Adapted for use with ATXMega256, Jan 2019, by Wesley Reuver & Mohamad Ali.
  * 
  * Please read this file for an overview and then MFRC522.cpp for comments on the specific functions.
  * Search for "mf-rc522" on ebay.com to purchase the MF-RC522 board. 
@@ -427,7 +428,7 @@ public:
 	
 private:
 	Gpio::Pin  _chipSelectPin = Gpio::Pin::C4;		// Arduino pin connected to MFRC522's SPI slave select input (Pin 24, NSS, active low)
-	Gpio::Pin _resetPowerDownPin = Gpio::Pin::C0;	// Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low)
+	Gpio::Pin _resetPowerDownPin = Gpio::Pin::F0;	// Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low)
 	StatusCode MIFARE_TwoStepHelper(uint8_t command, uint8_t blockAddr, long data);
 };
 

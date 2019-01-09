@@ -2,7 +2,7 @@
 * RotationSensor.cpp
 *
 * Created: 19-Mar-18 14:38:33
-* Author: Robin C. Pel
+* Author: Robin C. Pel, Wesley Reuver
 */
 
 #include "RotationSensor.h"
@@ -22,14 +22,14 @@ uint8_t Sensors::RotationSensor::getData()
 {
 	uint8_t measurement = 0b00000000;
 	
-	if (Gpio::GetPinValue(Gpio::Pin::B5) == Gpio::Value::High)
+	if (Gpio::GetPinValue(Gpio::Pin::B0) == Gpio::Value::High)
 	{
-		SetPinValue(Gpio::Pin::D0, Gpio::Value::High);
+		SetPinValue(Gpio::Pin::E5, Gpio::Value::High);
 		measurement = 0b00000001;
 	}
 	else
 	{
-		SetPinValue(Gpio::Pin::D0, Gpio::Value::Low);
+		SetPinValue(Gpio::Pin::E5, Gpio::Value::Low);
 	}
 	
 	return measurement;

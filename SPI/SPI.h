@@ -2,7 +2,7 @@
  * SPI.h
  *
  * Created: 19/12/2018 11:52:22
- *  Author: Wesley
+ *  Author: Wesley Reuver
  */ 
 
 

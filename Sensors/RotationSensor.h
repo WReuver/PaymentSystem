@@ -2,7 +2,7 @@
 * RotationSensor.h
 *
 * Created: 19-Mar-18 14:38:33
-* Author: Robin C. Pel
+* Author: Robin C. Pel, Wesley Reuver
 */
 
 #ifndef __ROTATIONSENSOR_H__

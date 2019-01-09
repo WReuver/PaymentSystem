@@ -2,7 +2,7 @@
  * SPI.cpp
  *
  * Created: 19/12/2018 11:52:31
- *  Author: Wesley
+ *  Author: Wesley Reuver
  */ 
 
 #include "SPI.h"
