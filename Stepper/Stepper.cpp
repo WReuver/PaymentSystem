@@ -74,9 +74,9 @@
  *
  * http://www.arduino.cc/en/Reference/Stepper
  */
-
 #include "Stepper.h"
 
+bool stopMotor;
 /*
  * two-wire constructor.
  * Sets which wires should control the motor.
@@ -201,7 +201,7 @@ void Stepper::step(int steps_to_move)
 
 
   // decrement the number of steps, moving one step each time:
-  while (steps_left > 0)
+  while (steps_left > 0 && !stopMotor)
   {
 	_delay_us(2400);	// 6500 good speed :)
     // increment or decrement the step number,
@@ -225,6 +225,7 @@ void Stepper::step(int steps_to_move)
     // step the motor to step number 0, 1, ..., {3 or 10}
 	stepMotor(this->step_number % 4);    
   }
+  stopMotor = false;
 }
 
 /*

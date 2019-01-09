@@ -22,14 +22,15 @@ uint8_t Sensors::RotationSensor::getData()
 {
 	uint8_t measurement = 0b00000000;
 	
-	if (Gpio::GetPinValue(Gpio::Pin::B0) == Gpio::Value::High)
+	if (Gpio::GetPinValue(Gpio::Pin::C0) == Gpio::Value::High)
 	{
-		SetPinValue(Gpio::Pin::E5, Gpio::Value::High);
-		measurement = 0b00000001;
+		SetPinValue(Gpio::Pin::E1, Gpio::Value::Low);
+		measurement = 0x00;
 	}
 	else
 	{
-		SetPinValue(Gpio::Pin::E5, Gpio::Value::Low);
+		SetPinValue(Gpio::Pin::E1, Gpio::Value::High);
+		measurement = 0x01;
 	}
 	
 	return measurement;
