@@ -20,7 +20,7 @@ using namespace Hardware;
 using namespace Gpio; 
 using namespace Sensors;
 
-#define F_CPU 32000000UL
+//#define F_CPU 32000000UL
 
 // Stepper Motor
 bool calibrate;
@@ -30,6 +30,8 @@ Pin motorPin2 = Pin::D1;
 Pin motorPin3 = Pin::D3;
 Pin motorPin4 = Pin::D0;
 Stepper stepper = Stepper(512, motorPin1, motorPin2, motorPin3, motorPin4);
+int16_t dispenseAngle = 136;
+uint16_t motorActionDelay = 100; // Delay of the stepper motor in ms before each action is started
 
 // IR sensor
 Pin rotationSensorPins[1] = { Pin::C0 };
@@ -54,13 +56,21 @@ ISR(PORTB_INT0_vect){
 	}
 }
 
+
 void calibrateMotor(){
+	_delay_ms(motorActionDelay);
 	calibrate = true;
 	stepper.step(5120);
 }
 
+void acceptCoin(){
+	_delay_ms(motorActionDelay);
+	stepper.step(dispenseAngle);
+}
+
 void rejectCoin(){
-	stepper.step(-136);
+	_delay_ms(motorActionDelay);
+	stepper.step(-dispenseAngle);
 }
 
 void initialize(void)
@@ -70,13 +80,11 @@ void initialize(void)
 	
 	// Set pinouts and enable logic level converter
 	SetPinDirection(Pin::B0, Dir::Input);		// IR SENSE 1  IN
-	SetPinDirection(Pin::E1, Dir::Output);		// LED 1
-	SetPinDirection(Pin::E4, Dir::Output);		// LED 1
-	SetPinDirection(Pin::E5, Dir::Output);		// LED 1
-	SetPinDirection(Pin::E6, Dir::Output);		// LED 2
-	SetPinDirection(Pin::E7, Dir::Output);		// LED 3
-	SetPinDirection(Pin::D4, Dir::Output);		// LLC Output Enable
-	SetPinValue(Pin::D4, Value::High);
+	SetPinDirection(Pin::E1, Dir::Output);		// DEBUG LED 1
+	SetPinDirection(Pin::E4, Dir::Output);		// DEBUG LED 2
+	SetPinDirection(Pin::E5, Dir::Output);		// DEBUG LED 3
+	SetPinDirection(Pin::D4, Dir::Output);		// LLC Output Enable Pin
+	SetPinValue(Pin::D4, Value::High);			// Enable logic level converter
 	
 	// Set up rising edge interrupt on pin B0 
 	PORTB.PIN0CTRL = PORT_ISC_RISING_gc;	// IR Sensor pin as interrupt; used with stepper calibration
@@ -133,7 +141,7 @@ int main(void)
 		if ( status == MFRC522::STATUS_OK ){
 			Gpio::SetPinValue(Pin::E4, Value::High);
 			_delay_ms(1000);
-			stepper.step(136);
+			acceptCoin();
 			_delay_ms(1000);
 			calibrateMotor();
 			_delay_ms(1000);
