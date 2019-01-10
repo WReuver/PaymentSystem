@@ -192,16 +192,28 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Communication\USART.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Communication\USART.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="CppCore\CppCore.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="CppCore\CppCore.h">
-	  <SubType>compile</SubType>
+      <SubType>compile</SubType>
     </Compile>
     <Compile Include="Hardware\AtxMega.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Hardware\AtxMega.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Hardware\GenericTC.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Hardware\GenericTC.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Hardware\Gpio.cpp">
@@ -216,18 +228,30 @@
     <Compile Include="Hardware\SystemClock.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Hardware\TimerCounter.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Hardware\TimerCounter.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Includes.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Master\RaspberryPi.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Master\RaspberryPi.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Sensors\RotationSensor.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Sensors\RotationSensor.h">
-		<SubType>compile</SubType>
-	</Compile>
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="RFID\MFRC522.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -250,6 +274,8 @@
   <ItemGroup>
     <Folder Include="Hardware" />
     <Folder Include="CppCore" />
+    <Folder Include="Communication" />
+    <Folder Include="Master" />
     <Folder Include="Sensors" />
     <Folder Include="SPI" />
     <Folder Include="RFID" />

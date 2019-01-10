@@ -30,8 +30,8 @@ Pin motorPin2 = Pin::D1;
 Pin motorPin3 = Pin::D3;
 Pin motorPin4 = Pin::D0;
 Stepper stepper = Stepper(512, motorPin1, motorPin2, motorPin3, motorPin4);	// First argument determines the number of turns per revolution
-int16_t dispenseAngle = 136;	// Angle to turn the motor to dispense a coin inward or outward, expressed in steps. (136/512)*360 = ~96 degrees
-uint16_t motorActionDelay = 100; // Delay of the stepper motor in ms before each action is started
+const int16_t dispenseAngle = 136;	// Angle to turn the motor to dispense a coin inward or outward, expressed in steps. (136/512)*360 = ~96 degrees
+const uint16_t motorActionDelay = 100; // Delay of the stepper motor in ms before each action is started
 
 // IR sensor
 Pin rotationSensorPins[1] = { Pin::C0 };
