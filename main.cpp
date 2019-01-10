@@ -29,8 +29,8 @@ Pin motorPin1 = Pin::D2;
 Pin motorPin2 = Pin::D1;
 Pin motorPin3 = Pin::D3;
 Pin motorPin4 = Pin::D0;
-Stepper stepper = Stepper(512, motorPin1, motorPin2, motorPin3, motorPin4);
-int16_t dispenseAngle = 136;
+Stepper stepper = Stepper(512, motorPin1, motorPin2, motorPin3, motorPin4);	// First argument determines the number of turns per revolution
+int16_t dispenseAngle = 136;	// Angle to turn the motor to dispense a coin inward or outward, expressed in steps. (136/512)*360 = ~96 degrees
 uint16_t motorActionDelay = 100; // Delay of the stepper motor in ms before each action is started
 
 // IR sensor
@@ -45,7 +45,8 @@ MFRC522 mfrc522 = MFRC522();
 MFRC522::MIFARE_Key key;
 uint8_t trailerBlock = 7;
 
-ISR(PORTB_INT0_vect){
+ISR(PORTB_INT0_vect)
+{
 	if(calibrate){
 		SetPinValue(Pin::E5, Value::High);
 		stopMotor = true;
@@ -56,19 +57,21 @@ ISR(PORTB_INT0_vect){
 	}
 }
 
-
-void calibrateMotor(){
+void calibrateMotor()
+{
 	_delay_ms(motorActionDelay);
 	calibrate = true;
 	stepper.step(5120);
 }
 
-void acceptCoin(){
+void acceptCoin()
+{
 	_delay_ms(motorActionDelay);
 	stepper.step(dispenseAngle);
 }
 
-void rejectCoin(){
+void rejectCoin()
+{
 	_delay_ms(motorActionDelay);
 	stepper.step(-dispenseAngle);
 }
@@ -99,19 +102,21 @@ void initialize(void)
 	calibrateMotor();
 }
 
-void setup_interrupts(){
+void setup_interrupts()
+{
 	cli();
 	CPU_CCP = CCP_IOREG_gc;
 	PMIC_CTRL = (PMIC_HILVLEN_bm);
 	PMIC_INTPRI = 0x00;
 }
 
-void setup_RFID(){
+void setup_RFID()
+{
 	// Set SPI settings for use with the MFRC522
 	spi.settings(SPI::Prescaler::DIV8, SPI::BitOrder::MSB_FIRST, SPI::Mode::Mode0);
 	// Initialize the MFRC522
 	mfrc522.PCD_Init();
-	// Clear the authentication key
+	// Clear the array containing the authentication key
 	for (uint8_t i = 0; i < 6; i++) {
 		key.keyByte[i] = 0xFF;
 	}
@@ -125,10 +130,12 @@ int main(void)
 			
     while (1) 
     {
-		if (rotationSensor->getData() == 0b00000001 ){
+		if (rotationSensor->getData() == 0b00000001 )
+		{
 			;
 		}
-		else {
+		else 
+		{
 			;
 		}
 		
@@ -138,7 +145,9 @@ int main(void)
 		
 		
 		MFRC522::StatusCode status = (MFRC522::StatusCode) mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, trailerBlock, &key, &(mfrc522.uid));
-		if ( status == MFRC522::STATUS_OK ){
+		if ( status == MFRC522::STATUS_OK )
+		{
+			// Display the succes status by turning on an LED
 			Gpio::SetPinValue(Pin::E4, Value::High);
 			_delay_ms(1000);
 			acceptCoin();
@@ -149,7 +158,9 @@ int main(void)
 			_delay_ms(1000);
 			calibrateMotor();
 		}
-		else {
+		else 
+		{
+			// Keep or turn the LED off in case of authentication failure
 			Gpio::SetPinValue(Pin::E4, Value::Low);
 		}
     }
