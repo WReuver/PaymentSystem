@@ -30,8 +30,8 @@ Pin motorPin2 = Pin::D1;
 Pin motorPin3 = Pin::D3;
 Pin motorPin4 = Pin::D0;
 Stepper stepper = Stepper(512, motorPin1, motorPin2, motorPin3, motorPin4);	// First argument determines the number of turns per revolution
-int16_t dispenseAngle = 136;	// Angle to turn the motor to dispense a coin inward or outward, expressed in steps. (136/512)*360 = ~96 degrees
-uint16_t motorActionDelay = 100; // Delay of the stepper motor in ms before each action is started
+const int16_t dispenseAngle = 136;	// Angle to turn the motor to dispense a coin inward or outward, expressed in steps. (136/512)*360 = ~96 degrees
+const uint16_t motorActionDelay = 0; // Delay of the stepper motor in ms before each action is started
 
 // IR sensor
 Pin rotationSensorPins[1] = { Pin::C0 };
@@ -122,6 +122,21 @@ void setup_RFID()
 	}
 }
 
+void test_reject(uint8_t n){
+	for(uint8_t i = 0; i < n; i++)
+	{
+		rejectCoin();
+		calibrateMotor();
+	}
+}
+
+void test_acceptReject(uint8_t n){
+	acceptCoin();
+	calibrateMotor();
+	rejectCoin();
+	calibrateMotor();
+}
+
 int main(void)
 {
 	setup_interrupts();
@@ -147,16 +162,9 @@ int main(void)
 		MFRC522::StatusCode status = (MFRC522::StatusCode) mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, trailerBlock, &key, &(mfrc522.uid));
 		if ( status == MFRC522::STATUS_OK )
 		{
-			// Display the succes status by turning on an LED
+			// Display the success status by turning on an LED
 			Gpio::SetPinValue(Pin::E4, Value::High);
-			_delay_ms(1000);
-			acceptCoin();
-			_delay_ms(1000);
-			calibrateMotor();
-			_delay_ms(1000);
-			rejectCoin();
-			_delay_ms(1000);
-			calibrateMotor();
+			test_acceptReject(0);
 		}
 		else 
 		{
