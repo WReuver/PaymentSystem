@@ -15,10 +15,12 @@
 #include "Hardware/SystemClock.h"
 #include "SPI/SPI.h"
 #include "RFID/MFRC522.h"
+#include "Communication/USART.h"
 
 using namespace Hardware;
 using namespace Gpio; 
 using namespace Sensors;
+using namespace Communication;
 
 //#define F_CPU 32000000UL
 
@@ -142,9 +144,26 @@ int main(void)
 	setup_interrupts();
 	initialize();	
 	setup_RFID();
+	
+	// USART
+	Usart::RxTx usartPins = Usart::RxTx::C2_C3;
+	Usart::Initialize(usartPins);
+	Usart::SetBaudrate(usartPins, Usart::Baudrate::b9600);      // Set the baud rate to 9600
+	Usart::EnableReceiver(usartPins);                           // Enable Rx
+	Usart::EnableTransmitter(usartPins);                        // Enable Tx
 			
     while (1) 
     {
+		uint8_t data = 0x05;
+		//Usart::TransmitData(usartPins, data);
+		//uint8_t dat = Usart::ReadData(usartPins);
+		/*if(dat == data){
+			SetPinValue(Pin::E4, Value::High);
+		} else SetPinValue(Pin::E4, Value::Low);
+		_delay_ms(500);
+		SetPinValue(Pin::E4, Value::Low);
+		_delay_ms(500);		*/
+		
 		if (rotationSensor->getData() == 0b00000001 )
 		{
 			;
@@ -164,7 +183,7 @@ int main(void)
 		{
 			// Display the success status by turning on an LED
 			Gpio::SetPinValue(Pin::E4, Value::High);
-			test_acceptReject(0);
+			test_acceptReject(5);
 		}
 		else 
 		{
