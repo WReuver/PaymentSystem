@@ -6,6 +6,9 @@
 */
 
 #include "RaspberryPi.h"
+#include "../Hardware/Gpio.h"
+
+using namespace Gpio;
 
 /**
  * Constructor, initializes the USART for the communication between the host and the Raspberry Pi
@@ -35,7 +38,7 @@ uint8_t Master::RaspberryPi::waitForNextCommand()
     
     while ( !foundPreAmble ) 
     {
-        Usart::WaitForData(usartPins);                                          // Wait for preamble part 1
+        //Usart::WaitForData(usartPins);                                          // Wait for preamble part 1
         if (Usart::ReadData(usartPins) == (uint8_t) PreAmble::P0) 
         {
             if ( Usart::WaitForDataWithTimeout(usartPins) == 0 )                // Wait for preamble part 2 with a timeout
@@ -93,12 +96,10 @@ Master::RaspberryPi::CommandResponse Master::RaspberryPi::getEquivalentCommandRe
 {
     switch (cmd)
     {
-        case Command::Lock:             return CommandResponse::Lock;
-        case Command::Unlock:           return CommandResponse::Unlock;
-        case Command::Sense:            return CommandResponse::Sense;
-        case Command::Temperature:      return CommandResponse::Temperature;
-        case Command::Dispense:         return CommandResponse::Dispense;
-        case Command::Distance:         return CommandResponse::Distance;        
+        case Command::Calibrate:        return CommandResponse::Calibrate;
+        case Command::Accept:			return CommandResponse::Accept;      
+		case Command::Reject:			return CommandResponse::Reject;
+		case Command::Demo:				return CommandResponse::Demo;
         default:                        return CommandResponse::ERROR;
     }
 }
@@ -121,12 +122,10 @@ bool Master::RaspberryPi::commandExists(uint8_t cmd)
 {
     switch (cmd) 
     {
-        case (uint8_t) Command::Lock:               return true;
-        case (uint8_t) Command::Unlock:             return true;
-        case (uint8_t) Command::Sense:              return true;
-        case (uint8_t) Command::Temperature:        return true;
-        case (uint8_t) Command::Dispense:           return true;
-        case (uint8_t) Command::Distance:           return true;
+        case (uint8_t) Command::Calibrate:			return true;
+		case (uint8_t) Command::Accept:				return true;
+		case (uint8_t) Command::Reject:				return true;
+		case (uint8_t) Command::Demo:				return true;
         default:                                    return false;
     }
 }

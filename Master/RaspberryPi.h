@@ -32,6 +32,10 @@ namespace Master
             Temperature         = 0x08,
             Dispense            = 0x0A,
             Distance            = 0x0C,
+			Calibrate			= 0x12,
+			Accept				= 0x14,
+			Reject				= 0x16,
+			Demo				= 0xFD,
             ERROR               = 0xFF
         };
         
@@ -43,6 +47,10 @@ namespace Master
             Temperature         = 0x09,
             Dispense            = 0x0B,
             Distance            = 0x0D,
+			Calibrate			= 0x13,
+			Accept				= 0x15,
+			Reject				= 0x17,
+			Demo				= 0xFE,
             ERROR               = 0xFF
         };
         

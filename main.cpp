@@ -16,11 +16,13 @@
 #include "SPI/SPI.h"
 #include "RFID/MFRC522.h"
 #include "Communication/USART.h"
+#include "Master/RaspberryPi.h"
 
 using namespace Hardware;
 using namespace Gpio; 
 using namespace Sensors;
 using namespace Communication;
+using namespace Master;
 
 //#define F_CPU 32000000UL
 
@@ -33,7 +35,7 @@ Pin motorPin3 = Pin::D3;
 Pin motorPin4 = Pin::D0;
 Stepper stepper = Stepper(512, motorPin1, motorPin2, motorPin3, motorPin4);	// First argument determines the number of turns per revolution
 const int16_t dispenseAngle = 136;	// Angle to turn the motor to dispense a coin inward or outward, expressed in steps. (136/512)*360 = ~96 degrees
-const uint16_t motorActionDelay = 0; // Delay of the stepper motor in ms before each action is started
+const uint16_t motorActionDelay = 500; // Delay of the stepper motor in ms before each action is started
 
 // IR sensor
 Pin rotationSensorPins[1] = { Pin::C0 };
@@ -46,6 +48,10 @@ SPI spi = SPI();
 MFRC522 mfrc522 = MFRC522();
 MFRC522::MIFARE_Key key;
 uint8_t trailerBlock = 7;
+
+//Raspberry Pi
+RaspberryPi* raspberryPi;                                                                                   // The Raspberry Pi object
+Usart::RxTx raspberrySerialPort = Usart::RxTx::C2_C3;                                                       // The Raspberry Pi's serial port pins
 
 ISR(PORTB_INT0_vect)
 {
@@ -102,6 +108,9 @@ void initialize(void)
 	
 	// Calibrate the stepper motor to its 'zero' position
 	calibrateMotor();
+	
+	//
+	raspberryPi = new RaspberryPi(raspberrySerialPort);
 }
 
 void setup_interrupts()
@@ -139,57 +148,113 @@ void test_acceptReject(uint8_t n){
 	calibrateMotor();
 }
 
+// Unlock all functionalities
+void executeAcceptCommand(uint8_t* response)
+{
+	acceptCoin();  
+	calibrateMotor();                                                                                                  // Unlock the micro controller so it will be able to execute all commands again
+	response[0] = (uint8_t) raspberryPi->getEquivalentCommandResponse(RaspberryPi::Command::Accept);                    // Add the equivalent command response
+	response[1] = 0x00;                                                                                                 // Add the amount of parameters
+}
+
+// Unlock all functionalities
+void executeRejectCommand(uint8_t* response)
+{
+	rejectCoin();    
+	calibrateMotor();                                                                                                // Unlock the micro controller so it will be able to execute all commands again
+	response[0] = (uint8_t) raspberryPi->getEquivalentCommandResponse(RaspberryPi::Command::Reject);                    // Add the equivalent command response
+	response[1] = 0x00;                                                                                                 // Add the amount of parameters
+}
+
+// Unlock all functionalities
+void executeDemoCommand(uint8_t* response)
+{
+	test_acceptReject(0);                                                                                                    // Unlock the micro controller so it will be able to execute all commands again
+	response[0] = (uint8_t) raspberryPi->getEquivalentCommandResponse(RaspberryPi::Command::Demo);                    // Add the equivalent command response
+	response[1] = 0x00;                                                                                                 // Add the amount of parameters
+}
+
+// Unlock all functionalities
+void executeCalibrateCommand(uint8_t* response)
+{
+	calibrateMotor();                                                                                                    // Unlock the micro controller so it will be able to execute all commands again
+	response[0] = (uint8_t) raspberryPi->getEquivalentCommandResponse(RaspberryPi::Command::Calibrate);                    // Add the equivalent command response
+	response[1] = 0x00;                                                                                                 // Add the amount of parameters
+}
+
+// Execute a command
+void executecommand(uint8_t* response, uint8_t* receivedCommand)
+{
+	switch ((RaspberryPi::Command) receivedCommand[0])
+	{
+		case RaspberryPi::Command::Calibrate:           executeCalibrateCommand(response);                              break;      // Received a sense command
+		case RaspberryPi::Command::Accept:				executeAcceptCommand(response);									break;
+		case RaspberryPi::Command::Reject:				executeRejectCommand(response);									break;
+		case RaspberryPi::Command::Demo:				executeDemoCommand(response);									break;      // Received a sense command
+		default:                                                                                                        break;      // Impossible
+	}
+}
+
+void runRoutine(void)
+{
+	SetPinValue(Pin::E1, Value::Low);
+	SetPinValue(Pin::E4, Value::Low);
+	SetPinValue(Pin::E5, Value::High);
+	while (1)
+	{
+		uint8_t operationStatus = raspberryPi->waitForNextCommand();        // 0 = success, 1 = command does not exist, 2 = timeout
+		uint8_t* receivedCommand = raspberryPi->getCommand();               // Get the location to the received command
+		uint8_t response[6] = { 0 };                                        // The response will never be larger than six bytes
+				
+		switch (operationStatus)
+		{
+			case 0:     // Everything went fine, the command is recognized and there was no timeout
+			SetPinValue(Pin::E5, Value::Low);
+			executecommand(response, receivedCommand);
+			break;
+			
+			
+			case 1:     // Command does not exist
+			//SetPinValue(Pin::E4, Value::High);
+			response[0] = (uint8_t) RaspberryPi::ComException::Unknown;     // Add the "Command Unknown" Exception as command response
+			response[1] = 0x00;                                             // Zero parameters
+			break;
+			
+			
+			case 2:     // Timeout
+			SetPinValue(Pin::E1, Value::High);
+			response[0] = (uint8_t) RaspberryPi::ComException::TimeOut;     // Add the "Serial timeout" Exception as command response
+			response[1] = 0x00;                                             // Zero parameters
+			break;
+		}
+		
+		raspberryPi->returnResponse(response);                              // Return the response
+	}
+}
+
 int main(void)
 {
 	setup_interrupts();
 	initialize();	
 	setup_RFID();
 	
-	// USART
-	Usart::RxTx usartPins = Usart::RxTx::C2_C3;
-	Usart::Initialize(usartPins);
-	Usart::SetBaudrate(usartPins, Usart::Baudrate::b9600);      // Set the baud rate to 9600
-	Usart::EnableReceiver(usartPins);                           // Enable Rx
-	Usart::EnableTransmitter(usartPins);                        // Enable Tx
+	uint8_t cmd1[6] = { 0 };
+	cmd1[0] = (uint8_t) RaspberryPi::Command::Accept;     // Add the "Serial timeout" Exception as command response
+	cmd1[1] = 0x00;
+	
+	uint8_t cmd2[6] = { 0 };
+	cmd2[0] = (uint8_t) RaspberryPi::Command::Demo;     // Add the "Serial timeout" Exception as command response
+	cmd2[1] = 0x00;
 			
     while (1) 
     {
-		uint8_t data = 0x05;
-		//Usart::TransmitData(usartPins, data);
-		//uint8_t dat = Usart::ReadData(usartPins);
-		/*if(dat == data){
-			SetPinValue(Pin::E4, Value::High);
-		} else SetPinValue(Pin::E4, Value::Low);
-		_delay_ms(500);
-		SetPinValue(Pin::E4, Value::Low);
-		_delay_ms(500);		*/
+		//_delay_ms(1000);
+		//raspberryPi->returnResponse(cmd2);
+		//_delay_ms(2000);
+		//raspberryPi->returnResponse(cmd2);
+		//_delay_ms(3000);
 		
-		if (rotationSensor->getData() == 0b00000001 )
-		{
-			;
-		}
-		else 
-		{
-			;
-		}
-		
-		if ( ! mfrc522.PICC_IsNewCardPresent());
-		
-		if ( ! mfrc522.PICC_ReadCardSerial());
-		
-		
-		MFRC522::StatusCode status = (MFRC522::StatusCode) mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, trailerBlock, &key, &(mfrc522.uid));
-		if ( status == MFRC522::STATUS_OK )
-		{
-			// Display the success status by turning on an LED
-			Gpio::SetPinValue(Pin::E4, Value::High);
-			test_acceptReject(5);
-		}
-		else 
-		{
-			// Keep or turn the LED off in case of authentication failure
-			Gpio::SetPinValue(Pin::E4, Value::Low);
-		}
+		runRoutine();
     }
 }
 
