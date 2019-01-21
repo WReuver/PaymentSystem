@@ -17,12 +17,14 @@
 #include "RFID/MFRC522.h"
 #include "Communication/USART.h"
 #include "Master/RaspberryPi.h"
+#include "State/Payment.h"
 
 using namespace Hardware;
 using namespace Gpio; 
 using namespace Sensors;
 using namespace Communication;
 using namespace Master;
+using namespace Payment;
 
 //#define F_CPU 32000000UL
 
@@ -52,6 +54,9 @@ uint8_t trailerBlock = 7;
 //Raspberry Pi
 RaspberryPi* raspberryPi;                                                                                   // The Raspberry Pi object
 Usart::RxTx raspberrySerialPort = Usart::RxTx::C2_C3;                                                       // The Raspberry Pi's serial port pins
+
+// State
+State state = Payment::State::AwaitingCoin;
 
 ISR(PORTB_INT0_vect)
 {
@@ -232,29 +237,45 @@ void runRoutine(void)
 	}
 }
 
+uint8_t* getCommandFormat(uint8_t* cmdFormat, RaspberryPi::Command cmd)
+{
+	switch(cmd)
+	{
+		case RaspberryPi::Command::Calibrate:
+			cmdFormat[0] = (uint8_t) RaspberryPi::Command::Calibrate;
+			cmdFormat[1] = 0x00;
+			break;
+		case RaspberryPi::Command::Accept:
+			cmdFormat[0] = (uint8_t) RaspberryPi::Command::Accept;
+			cmdFormat[1] = 0x00;
+			break;
+		case RaspberryPi::Command::Reject:
+			cmdFormat[0] = (uint8_t) RaspberryPi::Command::Reject;
+			cmdFormat[1] = 0x00;
+			break;
+		case RaspberryPi::Command::Demo:
+			cmdFormat[0] = (uint8_t) RaspberryPi::Command::Demo;
+			cmdFormat[1] = 0x00;
+			break;
+		default:	
+			break;
+	}
+	
+	return cmdFormat;
+}
+
 int main(void)
 {
 	setup_interrupts();
 	initialize();	
 	setup_RFID();
-	
-	uint8_t cmd1[6] = { 0 };
-	cmd1[0] = (uint8_t) RaspberryPi::Command::Accept;     // Add the "Serial timeout" Exception as command response
-	cmd1[1] = 0x00;
-	
-	uint8_t cmd2[6] = { 0 };
-	cmd2[0] = (uint8_t) RaspberryPi::Command::Demo;     // Add the "Serial timeout" Exception as command response
-	cmd2[1] = 0x00;
 			
+	uint8_t cmdFormat[6] = { 0 };
+		
     while (1) 
     {
-		//_delay_ms(1000);
-		//raspberryPi->returnResponse(cmd2);
-		//_delay_ms(2000);
-		//raspberryPi->returnResponse(cmd2);
-		//_delay_ms(3000);
-		
-		runRoutine();
+		raspberryPi->returnResponse(getCommandFormat(cmdFormat, RaspberryPi::Command::Demo));
+		_delay_ms(2000);
     }
 }
 
