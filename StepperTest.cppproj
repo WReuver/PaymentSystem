@@ -264,6 +264,9 @@
     <Compile Include="SPI\SPI.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="State\Payment.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Stepper\Stepper.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -276,6 +279,7 @@
     <Folder Include="CppCore" />
     <Folder Include="Communication" />
     <Folder Include="Master" />
+    <Folder Include="State" />
     <Folder Include="Sensors" />
     <Folder Include="SPI" />
     <Folder Include="RFID" />

@@ -17,12 +17,14 @@
 #include "RFID/MFRC522.h"
 #include "Communication/USART.h"
 #include "Master/RaspberryPi.h"
+#include "State/Payment.h"
 
 using namespace Hardware;
 using namespace Gpio; 
 using namespace Sensors;
 using namespace Communication;
 using namespace Master;
+using namespace Payment;
 
 //#define F_CPU 32000000UL
 
@@ -53,15 +55,18 @@ uint8_t trailerBlock = 7;
 RaspberryPi* raspberryPi;                                                                                   // The Raspberry Pi object
 Usart::RxTx raspberrySerialPort = Usart::RxTx::C2_C3;                                                       // The Raspberry Pi's serial port pins
 
+//State
+State state = Payment::State::AwaitingCoin;
+
 ISR(PORTB_INT0_vect)
 {
 	if(calibrate){
-		SetPinValue(Pin::E5, Value::High);
+		//SetPinValue(Pin::E5, Value::High);
 		stopMotor = true;
 		calibrate = false;
 	} 
 	else {
-		SetPinValue(Pin::E5, Value::Low);
+		//SetPinValue(Pin::E5, Value::Low);
 	}
 }
 
@@ -70,6 +75,20 @@ void calibrateMotor()
 	_delay_ms(motorActionDelay);
 	calibrate = true;
 	stepper.step(5120);
+}
+
+void calibrateMotor(bool dir)
+{
+	_delay_ms(motorActionDelay);
+	calibrate = true;
+	if (dir)
+	{
+		stepper.step(5120);
+	}
+	else
+	{
+		stepper.step(-5120);
+	}
 }
 
 void acceptCoin()
@@ -152,7 +171,7 @@ void test_acceptReject(uint8_t n){
 void executeAcceptCommand(uint8_t* response)
 {
 	acceptCoin();  
-	calibrateMotor();                                                                                                  // Unlock the micro controller so it will be able to execute all commands again
+	calibrateMotor(false);                                                                                                  // Unlock the micro controller so it will be able to execute all commands again
 	response[0] = (uint8_t) raspberryPi->getEquivalentCommandResponse(RaspberryPi::Command::Accept);                    // Add the equivalent command response
 	response[1] = 0x00;                                                                                                 // Add the amount of parameters
 }
@@ -237,24 +256,65 @@ int main(void)
 	setup_interrupts();
 	initialize();	
 	setup_RFID();
-	
-	uint8_t cmd1[6] = { 0 };
-	cmd1[0] = (uint8_t) RaspberryPi::Command::Accept;     // Add the "Serial timeout" Exception as command response
-	cmd1[1] = 0x00;
-	
-	uint8_t cmd2[6] = { 0 };
-	cmd2[0] = (uint8_t) RaspberryPi::Command::Demo;     // Add the "Serial timeout" Exception as command response
-	cmd2[1] = 0x00;
 			
+	// Start the clock for TC0D and set the prescaler to 1.024
+	TimerCounter::SetClock(TimerCounter::TC::TC0D, TimerCounter::ClockValue::Div1024);
+	
+	// Set the period to 31.250   (Source Clock / Prescaler = 31.250)
+	TimerCounter::SetPeriod(TimerCounter::TC::TC0D, 31250);
     while (1) 
     {
-		//_delay_ms(1000);
-		//raspberryPi->returnResponse(cmd2);
-		//_delay_ms(2000);
-		//raspberryPi->returnResponse(cmd2);
-		//_delay_ms(3000);
-		
-		runRoutine();
+		switch(state)
+		{
+			case Payment::State::Idle:
+				break;
+			case Payment::State::AwaitingCoin:
+				if(rotationSensor->getData())
+				{
+					SetPinValue(Pin::E1, Value::High);
+					state = Payment::State::Scan;
+				}
+				break;
+			case Payment::State::Scan:
+				while (TCD0.CNT < 0xF424)
+				{
+					if ( ! mfrc522.PICC_IsNewCardPresent())
+					{
+						break;
+					}
+					if ( ! mfrc522.PICC_ReadCardSerial())
+					{
+						break;
+					}
+					
+					SetPinValue(Pin::E5, Value::High);
+					state = Payment::State::VerifyPayment;
+					break;
+				}
+				if (state == Payment::State::Scan)
+				{
+					rejectCoin();
+					calibrateMotor();
+					state = Payment::State::AwaitingCoin;
+					SetPinValue(Pin::E1, Value::Low);
+				}
+				break;
+			case Payment::State::VerifyPayment:
+				MFRC522::StatusCode status = (MFRC522::StatusCode) mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, trailerBlock, &key, &(mfrc522.uid));
+				if ( status == MFRC522::STATUS_OK )
+				{
+					SetPinValue(Pin::E4, Value::High);
+					acceptCoin();
+					calibrateMotor(false);
+					state = Payment::State::AwaitingCoin;
+					SetPinValue(Pin::E1, Value::Low);
+					SetPinValue(Pin::E4, Value::Low);
+					SetPinValue(Pin::E5, Value::Low);
+				}
+				break;		
+			//default:	break;
+		}
+		 
     }
 }
 
